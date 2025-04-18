@@ -1,0 +1,20 @@
+{
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1
+  },
+  "whisper": {
+    "model": "whisper-1",
+    "response_format": "text"
+  },
+  "ui": {
+    "window_width": 800,
+    "window_height": 600,
+    "theme": "system"
+  },
+  "defaults": {
+    "language": "",
+    "save_directory": "",
+    "custom_vocabulary": []
+  }
+}

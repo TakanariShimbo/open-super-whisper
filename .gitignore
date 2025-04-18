@@ -1,0 +1,33 @@
+# Environment and sensitive data
+.env
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Temp files
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+temp/
+
+# User-specific settings
+.open_super_whisper/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Windows specific
+Thumbs.db
+desktop.ini
