@@ -76,6 +76,23 @@ uv sync
 python main.py
 ```
 
+### Building the Application
+
+To create a standalone executable, you can use PyInstaller:
+
+```bash
+pyinstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
+```
+
+This command does the following:
+- `--onefile`: Creates a single executable file
+- `--windowed`: Prevents a console window from appearing
+- `--icon icon.ico`: Sets the application icon
+- `--name "OpenSuperWhisper"`: Specifies the output filename
+- `--add-data "icon.ico;."`: Includes the icon file in the executable
+
+Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` folder.
+
 ## Usage
 
 ### Setting up your API Key
