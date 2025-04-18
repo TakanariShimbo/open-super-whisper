@@ -15,8 +15,9 @@ from PyQt6.QtWidgets import (
     QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
     QSystemTrayIcon, QMenu, QStyle
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
 from PyQt6.QtGui import QIcon, QAction, QFont
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import keyboard
 
 from src.core.audio_recorder import AudioRecorder
@@ -212,6 +213,12 @@ class MainWindow(QMainWindow):
         self.hotkey = self.settings.value("hotkey", DEFAULT_HOTKEY)
         self.auto_copy = self.settings.value("auto_copy", True, type=bool)
         
+        # サウンド設定
+        self.enable_sound = self.settings.value("enable_sound", True, type=bool)
+        
+        # サウンドプレーヤーの初期化
+        self.setup_sound_players()
+        
         # Initialize components
         self.audio_recorder = AudioRecorder()
         
@@ -380,6 +387,13 @@ class MainWindow(QMainWindow):
         self.auto_copy_action.triggered.connect(self.toggle_auto_copy)
         toolbar.addAction(self.auto_copy_action)
         
+        # Sound option
+        self.sound_action = QAction("通知音", self)
+        self.sound_action.setCheckable(True)
+        self.sound_action.setChecked(self.enable_sound)
+        self.sound_action.triggered.connect(self.toggle_sound_option)
+        toolbar.addAction(self.sound_action)
+        
         # Add separator
         toolbar.addSeparator()
         
@@ -421,6 +435,11 @@ class MainWindow(QMainWindow):
     
     def toggle_recording(self):
         """Start or stop recording"""
+        # GUIスレッドでの実行を保証するためQTimer.singleShotを使用
+        QTimer.singleShot(0, self._toggle_recording_impl)
+    
+    def _toggle_recording_impl(self):
+        """実際の録音切り替え処理の実装"""
         if self.audio_recorder.is_recording():
             self.stop_recording()
         else:
@@ -441,6 +460,9 @@ class MainWindow(QMainWindow):
         self.recording_timer.start(1000)  # Update every second
         
         self.status_bar.showMessage("録音中...")
+        
+        # Play start sound
+        self.play_start_sound()
     
     def stop_recording(self):
         """Stop recording and start transcription"""
@@ -454,6 +476,9 @@ class MainWindow(QMainWindow):
         if audio_file:
             self.status_bar.showMessage("文字起こし中...")
             self.start_transcription(audio_file)
+        
+        # Play stop sound
+        self.play_stop_sound()
     
     def update_recording_status(self, is_recording):
         """Update the recording indicator"""
@@ -543,6 +568,9 @@ class MainWindow(QMainWindow):
         if self.auto_copy and text:
             QApplication.clipboard().setText(text)
             self.status_bar.showMessage(f"文字起こしが完了し、クリップボードにコピーしました (使用モデル: {model_name})", 3000)
+        
+        # Play complete sound
+        self.play_complete_sound()
     
     def copy_to_clipboard(self):
         """Copy transcription to clipboard"""
@@ -715,6 +743,57 @@ class MainWindow(QMainWindow):
         
         # アプリケーションを終了
         QApplication.quit()
+    
+    def setup_sound_players(self):
+        """サウンドプレーヤーの初期化"""
+        # 録音開始用サウンドプレーヤー
+        self.start_player = QMediaPlayer()
+        self.start_audio_output = QAudioOutput()
+        self.start_player.setAudioOutput(self.start_audio_output)
+        
+        # 録音終了用サウンドプレーヤー
+        self.stop_player = QMediaPlayer()
+        self.stop_audio_output = QAudioOutput()
+        self.stop_player.setAudioOutput(self.stop_audio_output)
+        
+        # 文字起こし完了用サウンドプレーヤー
+        self.complete_player = QMediaPlayer()
+        self.complete_audio_output = QAudioOutput()
+        self.complete_player.setAudioOutput(self.complete_audio_output)
+    
+    def play_start_sound(self):
+        """録音開始サウンドを再生"""
+        if not self.enable_sound:
+            return
+        # Windows標準のサウンドを再生（開始音はWindowsの「デバイスが接続された時の音」を使用）
+        self.start_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Hardware Insert.wav"))
+        self.start_audio_output.setVolume(0.5)
+        self.start_player.play()
+    
+    def play_stop_sound(self):
+        """録音終了サウンドを再生"""
+        if not self.enable_sound:
+            return
+        # Windows標準のサウンドを再生
+        self.stop_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Notify System Generic.wav"))
+        self.stop_audio_output.setVolume(0.5)
+        self.stop_player.play()
+    
+    def play_complete_sound(self):
+        """文字起こし完了サウンドを再生"""
+        if not self.enable_sound:
+            return
+        # Windows標準のサウンドを再生
+        self.complete_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Notify Calendar.wav"))
+        self.complete_audio_output.setVolume(0.5)
+        self.complete_player.play()
+
+    def toggle_sound_option(self):
+        """通知音のオン/オフを切り替える"""
+        self.enable_sound = self.sound_action.isChecked()
+        self.settings.setValue("enable_sound", self.enable_sound)
+        status = "有効" if self.enable_sound else "無効"
+        self.status_bar.showMessage(f"通知音を{status}にしました", 2000)
 
 
 def main():
