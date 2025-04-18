@@ -81,7 +81,7 @@ python main.py
 To create a standalone executable, you can use PyInstaller:
 
 ```bash
-pyinstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
+python -m PyInstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
 ```
 
 This command does the following:

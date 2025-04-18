@@ -81,7 +81,7 @@ python main.py
 スタンドアロンの実行可能ファイルを作成するには、PyInstallerを使用します：
 
 ```bash
-pyinstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
+python -m PyInstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
 ```
 
 このコマンドは以下の処理を行います：
