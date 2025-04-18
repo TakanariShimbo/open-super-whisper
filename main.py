@@ -10,6 +10,7 @@ audio files, custom vocabulary, and various output options.
 
 import sys
 import os
+import argparse
 from pathlib import Path
 
 # Add src directory to path for imports
@@ -19,5 +20,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from src.gui.main_window import main
 
 if __name__ == "__main__":
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Open Super Whisper")
+    parser.add_argument("-m", "--minimized", action="store_true", 
+                        help="Start application minimized to system tray")
+    args = parser.parse_args()
+    
     # Start the application
+    if args.minimized:
+        sys.argv.append("--minimized")
     main()

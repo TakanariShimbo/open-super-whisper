@@ -4,19 +4,26 @@ import threading
 import time
 from pathlib import Path
 from datetime import datetime
+import winreg
+import ctypes
+import shutil
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QTextEdit, QLabel, QComboBox, QFileDialog,
     QCheckBox, QLineEdit, QListWidget, QMessageBox, QSplitter,
-    QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout
+    QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
+    QSystemTrayIcon, QMenu, QStyle
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings
 from PyQt6.QtGui import QIcon, QAction, QFont
+import keyboard
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
 
+# define hotkey settings
+DEFAULT_HOTKEY = "ctrl+shift+r"
 
 class APIKeyDialog(QDialog):
     """Dialog to enter OpenAI API key"""
@@ -141,6 +148,52 @@ class VocabularyDialog(QDialog):
         return [self.vocabulary_list.item(i).text() for i in range(self.vocabulary_list.count())]
 
 
+class HotkeyDialog(QDialog):
+    """Dialog to set global hotkey"""
+    
+    def __init__(self, parent=None, current_hotkey=None):
+        super().__init__(parent)
+        self.setWindowTitle("グローバルホットキー設定")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout()
+        
+        # Hotkey input
+        form_layout = QFormLayout()
+        self.hotkey_input = QLineEdit()
+        if current_hotkey:
+            self.hotkey_input.setText(current_hotkey)
+        self.hotkey_input.setPlaceholderText("例: ctrl+shift+r")
+        form_layout.addRow("ホットキー:", self.hotkey_input)
+        
+        layout.addLayout(form_layout)
+        
+        # Information text
+        info_label = QLabel(
+            "録音を開始/停止するグローバルホットキーを設定します。"
+            "例: ctrl+shift+r, alt+w など"
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        self.save_button = QPushButton("保存")
+        self.save_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.clicked.connect(self.reject)
+        
+        button_layout.addWidget(self.cancel_button)
+        button_layout.addWidget(self.save_button)
+        
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+    
+    def get_hotkey(self):
+        """Return the entered hotkey"""
+        return self.hotkey_input.text()
+
+
 class MainWindow(QMainWindow):
     """Main application window"""
     
@@ -154,6 +207,10 @@ class MainWindow(QMainWindow):
         # Load settings
         self.settings = QSettings("OpenSuperWhisper", "WhisperTranscriber")
         self.api_key = self.settings.value("api_key", "")
+        
+        # ホットキーとクリップボード設定
+        self.hotkey = self.settings.value("hotkey", DEFAULT_HOTKEY)
+        self.auto_copy = self.settings.value("auto_copy", True, type=bool)
         
         # Initialize components
         self.audio_recorder = AudioRecorder()
@@ -176,6 +233,12 @@ class MainWindow(QMainWindow):
             
         # Setup additional connections
         self.setup_connections()
+        
+        # Setup global hotkey
+        self.setup_global_hotkey()
+        
+        # Setup system tray
+        self.setup_system_tray()
     
     def init_ui(self):
         """Initialize the user interface"""
@@ -278,19 +341,19 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
     
     def create_toolbar(self):
-        """Create toolbar with actions"""
-        toolbar = QToolBar("メインツールバー")
+        """Create the toolbar with actions"""
+        toolbar = QToolBar()
         self.addToolBar(toolbar)
         
-        # API key action
-        api_key_action = QAction("APIキー", self)
+        # API Key action
+        api_key_action = QAction("APIキー設定", self)
         api_key_action.triggered.connect(self.show_api_key_dialog)
         toolbar.addAction(api_key_action)
         
         # Custom vocabulary action
-        vocab_action = QAction("カスタム語彙", self)
-        vocab_action.triggered.connect(self.show_vocabulary_dialog)
-        toolbar.addAction(vocab_action)
+        vocabulary_action = QAction("カスタム語彙", self)
+        vocabulary_action.triggered.connect(self.show_vocabulary_dialog)
+        toolbar.addAction(vocabulary_action)
         
         # Copy to clipboard action
         copy_action = QAction("クリップボードにコピー", self)
@@ -301,6 +364,30 @@ class MainWindow(QMainWindow):
         save_action = QAction("テキストとして保存", self)
         save_action.triggered.connect(self.save_transcription)
         toolbar.addAction(save_action)
+        
+        # Add separator
+        toolbar.addSeparator()
+        
+        # Global hotkey setting
+        hotkey_action = QAction("ホットキー設定", self)
+        hotkey_action.triggered.connect(self.show_hotkey_dialog)
+        toolbar.addAction(hotkey_action)
+        
+        # Auto-copy option
+        self.auto_copy_action = QAction("自動コピー", self)
+        self.auto_copy_action.setCheckable(True)
+        self.auto_copy_action.setChecked(self.auto_copy)
+        self.auto_copy_action.triggered.connect(self.toggle_auto_copy)
+        toolbar.addAction(self.auto_copy_action)
+        
+        # Add separator
+        toolbar.addSeparator()
+        
+        # Exit action
+        exit_action = QAction("アプリケーション終了", self)
+        exit_action.triggered.connect(self.quit_application)
+        exit_action.setShortcut("Alt+F4")  # 終了ショートカットを追加
+        toolbar.addAction(exit_action)
     
     def show_api_key_dialog(self):
         """Show dialog to enter OpenAI API key"""
@@ -451,6 +538,11 @@ class MainWindow(QMainWindow):
         
         # Update status with model information
         self.status_bar.showMessage(f"文字起こしが完了しました (使用モデル: {model_name})", 3000)
+        
+        # Auto copy to clipboard if enabled
+        if self.auto_copy and text:
+            QApplication.clipboard().setText(text)
+            self.status_bar.showMessage(f"文字起こしが完了し、クリップボードにコピーしました (使用モデル: {model_name})", 3000)
     
     def copy_to_clipboard(self):
         """Copy transcription to clipboard"""
@@ -494,12 +586,175 @@ class MainWindow(QMainWindow):
             model_name = self.model_combo.currentText()
             self.status_bar.showMessage(f"文字起こしモデルを「{model_name}」に変更しました", 2000)
 
+    def setup_global_hotkey(self):
+        """Setup global hotkey"""
+        try:
+            # まず以前のホットキーの登録を試みる（エラーが出ても続行）
+            try:
+                keyboard.unhook_all_hotkeys()
+            except:
+                pass
+            
+            # 新しいホットキーを登録
+            keyboard.add_hotkey(self.hotkey, self.toggle_recording)
+            print(f"ホットキー '{self.hotkey}' を設定しました")
+            return True
+        except Exception as e:
+            print(f"ホットキーの設定エラー: {e}")
+            # エラーがあってもアプリは正常に動作するようにする
+            return False
+    
+    def setup_system_tray(self):
+        """Setup system tray"""
+        # アイコンファイル（icon.ico）のパスを取得
+        if getattr(sys, 'frozen', False):
+            # 実行可能ファイルとして実行している場合
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # スクリプトとして実行している場合
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        
+        icon_path = os.path.join(base_path, "icon.ico")
+        
+        if os.path.exists(icon_path):
+            self.tray_icon = QSystemTrayIcon(QIcon(icon_path), self)
+        else:
+            # アイコンファイルが見つからない場合は標準アイコンを使用
+            self.tray_icon = QSystemTrayIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay), self)
+        
+        self.tray_icon.setToolTip("Open Super Whisper")
+        
+        # Create tray menu
+        menu = QMenu()
+        
+        # Add show/hide action
+        show_action = QAction("表示", self)
+        show_action.triggered.connect(self.show)
+        menu.addAction(show_action)
+        
+        # Add separator
+        menu.addSeparator()
+        
+        # Add record action
+        record_action = QAction("録音開始/停止", self)
+        record_action.triggered.connect(self.toggle_recording)
+        menu.addAction(record_action)
+        
+        # Add separator
+        menu.addSeparator()
+        
+        # Add exit action
+        exit_action = QAction("終了", self)
+        exit_action.triggered.connect(self.quit_application)
+        menu.addAction(exit_action)
+        
+        self.tray_icon.setContextMenu(menu)
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+        self.tray_icon.show()
+    
+    def tray_icon_activated(self, reason):
+        """Handle tray icon activation"""
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+            if self.isVisible():
+                self.hide()
+            else:
+                self.show()
+                self.activateWindow()
+    
+    def closeEvent(self, event):
+        """Override close event to minimize to tray instead of closing"""
+        # Alt+F4 またはシステムのクローズ要求によって呼ばれる
+        
+        # Alt キーが押されている場合は完全に終了
+        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
+            self.quit_application()
+            event.accept()
+        # 通常の閉じる操作ではトレイに最小化
+        elif self.tray_icon.isVisible():
+            QMessageBox.information(self, "情報", 
+                "アプリケーションはシステムトレイで実行されています。\n"
+                "完全に終了するには、トレイアイコンから「終了」を選択するか、\n"
+                "ツールバーの「アプリケーション終了」をクリックしてください。")
+            self.hide()
+            event.ignore()
+        else:
+            event.accept()
+    
+    def show_hotkey_dialog(self):
+        """Show dialog to set global hotkey"""
+        # Unregister current hotkey temporarily
+        try:
+            keyboard.unhook_all_hotkeys()
+        except:
+            pass
+        
+        dialog = HotkeyDialog(self, self.hotkey)
+        if dialog.exec():
+            new_hotkey = dialog.get_hotkey()
+            if new_hotkey:
+                self.hotkey = new_hotkey
+                self.settings.setValue("hotkey", self.hotkey)
+                self.setup_global_hotkey()
+                self.status_bar.showMessage(f"ホットキーを {self.hotkey} に設定しました", 3000)
+    
+    def toggle_auto_copy(self):
+        """Toggle auto copy option"""
+        self.auto_copy = self.auto_copy_action.isChecked()
+        self.settings.setValue("auto_copy", self.auto_copy)
+        status = "有効" if self.auto_copy else "無効"
+        self.status_bar.showMessage(f"自動コピーを{status}にしました", 2000)
+    
+    def quit_application(self):
+        """アプリケーションを完全に終了する"""
+        # トレイアイコンを非表示にする
+        if hasattr(self, 'tray_icon'):
+            self.tray_icon.hide()
+        
+        # 設定を保存
+        self.settings.sync()
+        
+        # アプリケーションを終了
+        QApplication.quit()
+
 
 def main():
     """Application entry point"""
     app = QApplication(sys.argv)
+    
+    # PyQt6ではハイDPIスケーリングはデフォルトで有効
+    # 古い属性設定は不要
+    
+    # Check if QSystemTrayIcon is supported
+    if not QSystemTrayIcon.isSystemTrayAvailable():
+        QMessageBox.critical(None, "Error", "システムトレイがサポートされていません。")
+        sys.exit(1)
+    
+    # Set quit on last window closed to False to allow minimizing to tray
+    app.setQuitOnLastWindowClosed(False)
+    
+    # Create and show the main window
     window = MainWindow()
-    window.show()
+    
+    # Show notification about hotkey if first run
+    settings = QSettings("OpenSuperWhisper", "WhisperTranscriber")
+    if not settings.contains("first_run_done"):
+        hotkey = settings.value("hotkey", DEFAULT_HOTKEY)
+        QMessageBox.information(
+            window, 
+            "ホットキー情報", 
+            f"Open Super Whisperは常にバックグラウンドで実行されています。\n"
+            f"グローバルホットキー: {hotkey} で録音を開始/停止できます。\n"
+            f"この設定はツールバーの「ホットキー設定」から変更できます。"
+        )
+        settings.setValue("first_run_done", True)
+    
+    # Show window (starts minimized to tray by default)
+    if '--minimized' in sys.argv or '-m' in sys.argv:
+        # Start minimized to tray
+        pass
+    else:
+        window.show()
+    
     sys.exit(app.exec())
 
 
