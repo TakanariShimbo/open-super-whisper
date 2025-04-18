@@ -83,12 +83,30 @@ python main.py
 1. On first launch, you'll be prompted to enter your OpenAI API key
 2. If you don't have an API key, you can get one from [OpenAI's website](https://platform.openai.com/api-keys)
 3. Your API key will be saved for future use
+4. To change it later, click "API Key Settings" in the toolbar
 
 ### Recording Audio
 
 1. Click the "Start Recording" button to begin recording from your microphone
 2. Click "Stop Recording" when you're done
 3. The application will automatically transcribe your recording
+4. You can also use the global hotkey (default: Ctrl+Shift+R) to start/stop recording even when the application is in the background
+
+### Using Global Hotkeys
+
+1. The default hotkey is set to "Ctrl+Shift+R"
+2. Pressing this hotkey will start/stop recording even when the application is in the background
+3. To change the hotkey, click "Hotkey Settings" in the toolbar
+
+### Using the System Tray
+
+1. The application stays resident in your system tray
+2. Closing the window will keep the application running in the background
+3. Click the system tray icon to toggle the application's visibility
+4. Right-click the system tray icon to access a context menu with options to:
+   - Show the application
+   - Start/stop recording
+   - Completely exit the application
 
 ### Importing Audio Files
 
@@ -100,6 +118,12 @@ python main.py
 
 1. Select a language from the dropdown menu before recording or importing audio
 2. Choose "Auto-detect" to let Whisper identify the language automatically
+
+### Model Selection
+
+1. Select the Whisper model to use from the dropdown menu
+2. Different models offer different balances of accuracy and processing speed
+3. Your selected model will be remembered for future sessions
 
 ### Custom Vocabulary
 
@@ -114,6 +138,22 @@ python main.py
 3. Use the toolbar buttons to:
    - Copy the transcription to clipboard
    - Save the transcription as a text file
+
+### Other Settings
+
+1. "Auto Copy" option: Toggle automatic copying of transcription to clipboard when completed
+
+### Command Line Options
+
+The application supports the following command line arguments:
+
+```bash
+python main.py -m
+# or
+python main.py --minimized
+```
+
+Using the `-m` or `--minimized` option will start the application minimized to the system tray only, without showing the window.
 
 ## License
 
