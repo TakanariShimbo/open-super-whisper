@@ -1,6 +1,6 @@
 # Open Super Whisper
 
-A Python-based desktop application for speech transcription using OpenAI's Whisper model.
+A Python-based desktop application for speech transcription using OpenAI's Whisper model that seamlessly integrates with your workflow. With global hotkeys for recording control and automatic clipboard integration, you can instantly transcribe speech to text in any application you're using - making it the perfect companion for note-taking, content creation, or accessibility needs.
 
 ## Features
 
@@ -11,6 +11,10 @@ A Python-based desktop application for speech transcription using OpenAI's Whisp
 - 📋 Copy transcription to clipboard
 - 💾 Save transcription to a text file
 - 🔄 Real-time recording status and timer
+
+## Demo
+
+![Demo of Open Super Whisper in action](demo/demo.gif)
 
 ## Requirements
 
