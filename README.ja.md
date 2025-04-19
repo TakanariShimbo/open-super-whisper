@@ -81,15 +81,19 @@ python main.py
 スタンドアロンの実行可能ファイルを作成するには、PyInstallerを使用します：
 
 ```bash
-python -m PyInstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
+# 直接ビルドする場合
+python -m PyInstaller --onefile --windowed --icon assets/icon.ico --name "OpenSuperWhisper" --add-data "assets;assets" main.py
+
+# または、すでに設定済みのspecファイルを使用する場合（推奨）
+python -m PyInstaller OpenSuperWhisper.spec
 ```
 
-このコマンドは以下の処理を行います：
+最初のコマンドは以下の処理を行います：
 - `--onefile`: 単一の実行可能ファイルを作成
 - `--windowed`: コンソールウィンドウを表示しない
-- `--icon icon.ico`: アプリケーションアイコンを設定
+- `--icon assets/icon.ico`: アプリケーションアイコンを設定
 - `--name "OpenSuperWhisper"`: 出力ファイル名を指定
-- `--add-data "icon.ico;."`: アイコンファイルを実行可能ファイルに含める
+- `--add-data "assets;assets"`: assetsディレクトリを実行可能ファイルに含める
 
 ビルドが完了すると、`dist`フォルダ内に`OpenSuperWhisper.exe`が生成されます。
 

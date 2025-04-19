@@ -81,15 +81,19 @@ python main.py
 To create a standalone executable, you can use PyInstaller:
 
 ```bash
-python -m PyInstaller --onefile --windowed --icon icon.ico --name "OpenSuperWhisper" --add-data "icon.ico;." main.py
+# Direct build option
+python -m PyInstaller --onefile --windowed --icon assets/icon.ico --name "OpenSuperWhisper" --add-data "assets;assets" main.py
+
+# Or using the pre-configured spec file (recommended)
+python -m PyInstaller OpenSuperWhisper.spec
 ```
 
-This command does the following:
+The first command does the following:
 - `--onefile`: Creates a single executable file
 - `--windowed`: Prevents a console window from appearing
-- `--icon icon.ico`: Sets the application icon
+- `--icon assets/icon.ico`: Sets the application icon
 - `--name "OpenSuperWhisper"`: Specifies the output filename
-- `--add-data "icon.ico;."`: Includes the icon file in the executable
+- `--add-data "assets;assets"`: Includes the entire assets directory in the executable
 
 Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` folder.
 
