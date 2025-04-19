@@ -26,6 +26,28 @@ from src.core.whisper_api import WhisperTranscriber
 # define hotkey settings
 DEFAULT_HOTKEY = "ctrl+shift+r"
 
+# PyInstallerでパス解決を行うヘルパー関数
+def getResourcePath(relative_path):
+    """PyInstallerでバンドルされている場合や通常実行時のリソースパスを解決します"""
+    try:
+        # PyInstallerでバンドルされている場合
+        base_path = getattr(sys, '_MEIPASS', None)
+        if base_path:
+            return os.path.join(base_path, relative_path)
+        
+        # 通常実行の場合
+        if getattr(sys, 'frozen', False):
+            # 実行可能ファイルとして実行している場合
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # スクリプトとして実行している場合
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        
+        return os.path.join(base_path, relative_path)
+    except Exception as e:
+        print(f"リソースパス解決エラー: {e}")
+        return relative_path
+
 class APIKeyDialog(QDialog):
     """Dialog to enter OpenAI API key"""
     
@@ -251,6 +273,16 @@ class MainWindow(QMainWindow):
         """Initialize the user interface"""
         self.setWindowTitle("Open Super Whisper")
         self.setMinimumSize(800, 600)
+        
+        # アプリケーションアイコンを設定
+        icon_path = getResourcePath("assets/icon.ico")
+        
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        else:
+            # アイコンファイルが見つからない場合は標準アイコンを使用
+            self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+            print(f"警告: アイコンファイルが見つかりません: {icon_path}")
         
         # Create central widget and main layout
         central_widget = QWidget()
@@ -634,21 +666,15 @@ class MainWindow(QMainWindow):
     
     def setup_system_tray(self):
         """Setup system tray"""
-        # アイコンファイル（icon.ico）のパスを取得
-        if getattr(sys, 'frozen', False):
-            # 実行可能ファイルとして実行している場合
-            base_path = os.path.dirname(sys.executable)
-        else:
-            # スクリプトとして実行している場合
-            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        
-        icon_path = os.path.join(base_path, "icon.ico")
+        # アイコンファイルのパスを取得
+        icon_path = getResourcePath("assets/icon.ico")
         
         if os.path.exists(icon_path):
             self.tray_icon = QSystemTrayIcon(QIcon(icon_path), self)
         else:
             # アイコンファイルが見つからない場合は標準アイコンを使用
             self.tray_icon = QSystemTrayIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay), self)
+            print(f"警告: システムトレイ用アイコンファイルが見つかりません: {icon_path}")
         
         self.tray_icon.setToolTip("Open Super Whisper")
         
@@ -799,6 +825,17 @@ class MainWindow(QMainWindow):
 def main():
     """Application entry point"""
     app = QApplication(sys.argv)
+    
+    # アプリケーションアイコンを設定
+    icon_path = getResourcePath("assets/icon.ico")
+    
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+    else:
+        # アイコンファイルが見つからない場合は標準アイコンを使用
+        app_icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        app.setWindowIcon(app_icon)
+        print(f"警告: アプリケーション用アイコンファイルが見つかりません: {icon_path}")
     
     # PyQt6ではハイDPIスケーリングはデフォルトで有効
     # 古い属性設定は不要
