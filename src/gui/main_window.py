@@ -791,8 +791,9 @@ class MainWindow(QMainWindow):
         """録音開始サウンドを再生"""
         if not self.enable_sound:
             return
-        # Windows標準のサウンドを再生（開始音はWindowsの「デバイスが接続された時の音」を使用）
-        self.start_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Hardware Insert.wav"))
+        # assets内の音声ファイルを使用
+        sound_path = getResourcePath("assets/start_sound.wav")
+        self.start_player.setSource(QUrl.fromLocalFile(sound_path))
         self.start_audio_output.setVolume(0.5)
         self.start_player.play()
     
@@ -800,8 +801,9 @@ class MainWindow(QMainWindow):
         """録音終了サウンドを再生"""
         if not self.enable_sound:
             return
-        # Windows標準のサウンドを再生
-        self.stop_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Notify System Generic.wav"))
+        # assets内の音声ファイルを使用
+        sound_path = getResourcePath("assets/stop_sound.wav")
+        self.stop_player.setSource(QUrl.fromLocalFile(sound_path))
         self.stop_audio_output.setVolume(0.5)
         self.stop_player.play()
     
@@ -809,8 +811,9 @@ class MainWindow(QMainWindow):
         """文字起こし完了サウンドを再生"""
         if not self.enable_sound:
             return
-        # Windows標準のサウンドを再生
-        self.complete_player.setSource(QUrl.fromLocalFile(r"C:\Windows\Media\Windows Notify Calendar.wav"))
+        # assets内の音声ファイルを使用
+        sound_path = getResourcePath("assets/complete_sound.wav")
+        self.complete_player.setSource(QUrl.fromLocalFile(sound_path))
         self.complete_audio_output.setVolume(0.5)
         self.complete_player.play()
 
