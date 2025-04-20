@@ -932,15 +932,19 @@ class MainWindow(QMainWindow):
             QMenu {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E6EC;
-            }
-            
-            QMenu::item {
-                padding: 5px 18px 5px 8px;
+                padding: 2px;
             }
             
             QMenu::item:selected {
-                background-color: #5B7FDE;
+                background-color: #4968C2;
                 color: white;
+                border-radius: 3px;
+                padding: 3px 6px;
+            }
+            
+            QMenu::item {
+                padding: 3px 6px;
+                margin: 1px 3px;
             }
             
             QMenu::separator {
@@ -951,10 +955,40 @@ class MainWindow(QMainWindow):
             
             /* ツールバーの選択色 */
             QToolBar QAction:checked {
-                background-color: #EBF0FF;
-                border: 1px solid #5B7FDE;
+                background-color: #5B7FDE;
+                color: white;
                 border-radius: 3px;
-                color: #5B7FDE;
+            }
+            
+            QToolBar QAction:hover {
+                background-color: #EBF0FF;
+                border-radius: 3px;
+            }
+            
+            /* ツールバーのボタン */
+            QToolButton {
+                padding: 5px 8px;
+                border-radius: 3px;
+                margin: 1px;
+            }
+            
+            QToolButton:checked {
+                background-color: #5B7FDE;
+                color: white;
+                font-weight: bold;
+            }
+            
+            QToolButton:hover {
+                background-color: #EBF0FF;
+            }
+            
+            QToolButton:checked:hover {
+                background-color: #4968C2;
+            }
+            
+            QToolButton:pressed {
+                background-color: #4968C2;
+                color: white;
             }
             
             QPushButton {
@@ -1600,13 +1634,16 @@ class MainWindow(QMainWindow):
                 padding: 2px;
             }
             
-            QMenu::item {
-                padding: 5px 18px 5px 8px;
+            QMenu::item:selected {
+                background-color: #4968C2;
+                color: white;
+                border-radius: 3px;
+                padding: 3px 6px;
             }
             
-            QMenu::item:selected {
-                background-color: #5B7FDE;
-                color: white;
+            QMenu::item {
+                padding: 3px 6px;
+                margin: 1px 3px;
             }
             
             QMenu::separator {
