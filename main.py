@@ -22,8 +22,7 @@ from src.gui.main_window import main
 if __name__ == "__main__":
     # コマンドライン引数の解析
     parser = argparse.ArgumentParser(description="Open Super Whisper")
-    parser.add_argument("-m", "--minimized", action="store_true", 
-                        help="システムトレイに最小化した状態で起動")
+    parser.add_argument("-m", "--minimized", action="store_true", help="システムトレイに最小化した状態で起動")
     args = parser.parse_args()
     
     # アプリケーションの起動
