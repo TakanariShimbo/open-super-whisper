@@ -299,9 +299,6 @@ class MainWindow(QMainWindow):
         self.record_button = QPushButton("録音開始")
         self.record_button.clicked.connect(self.toggle_recording)
         
-        self.import_button = QPushButton("音声ファイル読込")
-        self.import_button.clicked.connect(self.import_audio)
-        
         # Language selection
         language_layout = QHBoxLayout()
         language_layout.addWidget(QLabel("言語:"))
@@ -345,7 +342,6 @@ class MainWindow(QMainWindow):
         
         # Add controls to layout
         control_layout.addWidget(self.record_button)
-        control_layout.addWidget(self.import_button)
         control_layout.addLayout(language_layout)
         control_layout.addLayout(model_layout)
         
@@ -398,11 +394,6 @@ class MainWindow(QMainWindow):
         copy_action = QAction("クリップボードにコピー", self)
         copy_action.triggered.connect(self.copy_to_clipboard)
         toolbar.addAction(copy_action)
-        
-        # Save as text action
-        save_action = QAction("テキストとして保存", self)
-        save_action.triggered.connect(self.save_transcription)
-        toolbar.addAction(save_action)
         
         # Add separator
         toolbar.addSeparator()
@@ -527,30 +518,6 @@ class MainWindow(QMainWindow):
             seconds = elapsed % 60
             self.recording_timer_label.setText(f"{minutes:02d}:{seconds:02d}")
     
-    def import_audio(self):
-        """Import audio file for transcription"""
-        if not self.whisper_transcriber:
-            QMessageBox.warning(self, "エラー", "先にAPIキーを設定してください")
-            return
-            
-        file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(
-            self,
-            "音声ファイル読込",
-            "",
-            "音声ファイル (*.mp3 *.wav *.m4a *.ogg *.flac);;すべてのファイル (*)"
-        )
-        
-        if file_path:
-            self.status_bar.showMessage(f"{os.path.basename(file_path)}を処理中...")
-            
-            # Convert file if needed
-            audio_file = self.audio_recorder.load_audio_file(file_path)
-            if audio_file:
-                self.start_transcription(audio_file)
-            else:
-                self.status_bar.showMessage("音声ファイルの処理中にエラーが発生しました", 3000)
-    
     def start_transcription(self, audio_file):
         """Start transcription in a separate thread"""
         if not self.whisper_transcriber:
@@ -609,28 +576,6 @@ class MainWindow(QMainWindow):
         text = self.transcription_text.toPlainText()
         QApplication.clipboard().setText(text)
         self.status_bar.showMessage("クリップボードにコピーしました", 2000)
-    
-    def save_transcription(self):
-        """Save transcription to a text file"""
-        text = self.transcription_text.toPlainText()
-        if not text:
-            return
-            
-        file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getSaveFileName(
-            self,
-            "文字起こしを保存",
-            f"transcription_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-            "テキストファイル (*.txt);;すべてのファイル (*)"
-        )
-        
-        if file_path:
-            try:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(text)
-                self.status_bar.showMessage(f"{os.path.basename(file_path)}に保存しました", 3000)
-            except Exception as e:
-                QMessageBox.warning(self, "保存エラー", f"ファイル保存中にエラーが発生しました: {e}")
     
     def setup_connections(self):
         """追加の接続設定"""

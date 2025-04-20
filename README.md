@@ -5,11 +5,9 @@ A Python-based desktop application for speech transcription using OpenAI's Whisp
 ## Features
 
 - 🎙️ Record audio directly from your microphone
-- 📁 Import audio files (supports MP3, WAV, M4A, OGG, FLAC)
 - 🌎 Support for 100+ languages with automatic language detection
 - 📝 Custom vocabulary support to improve transcription accuracy
 - 📋 Copy transcription to clipboard
-- 💾 Save transcription to a text file
 - 🔄 Real-time recording status and timer
 
 ## Demo
@@ -133,12 +131,6 @@ Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` fol
    - Start/stop recording
    - Completely exit the application
 
-### Importing Audio Files
-
-1. Click the "Import Audio" button
-2. Select an audio file from your computer
-3. The application will process and transcribe the file
-
 ### Language Selection
 
 1. Select a language from the dropdown menu before recording or importing audio
@@ -162,7 +154,6 @@ Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` fol
 2. Edit the text if needed (the text area is editable)
 3. Use the toolbar buttons to:
    - Copy the transcription to clipboard
-   - Save the transcription as a text file
 
 ### Other Settings
 

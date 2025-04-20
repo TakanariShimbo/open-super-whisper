@@ -4,8 +4,8 @@ Open Super Whisper - A Python desktop application for speech transcription
 using OpenAI's Whisper model.
 
 This application provides a user-friendly interface for recording audio and
-transcribing it using the OpenAI Whisper API. It also supports importing
-audio files, custom vocabulary, and various output options.
+transcribing it using the OpenAI Whisper API. It features global hotkeys
+for recording control and automatic clipboard integration.
 """
 
 import sys
