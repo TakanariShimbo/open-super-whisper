@@ -113,7 +113,7 @@ class WhisperTranscriber:
         language : str, optional
             The language code (e.g., "en", "ja", "zh") for transcription
         response_format : str, optional
-            Format for the response: "text", "json", "srt", "verbose_json", or "vtt"
+            Format for the response: "text", "json", "verbose_json", or "vtt"
             
         Returns:
         --------
@@ -160,32 +160,3 @@ class WhisperTranscriber:
         except Exception as e:
             print(f"Error during transcription: {e}")
             return f"Error: {str(e)}"
-
-    def detect_language(self, audio_file):
-        """
-        Detect the language of the audio using Whisper
-        
-        Parameters:
-        -----------
-        audio_file : str
-            Path to the audio file
-            
-        Returns:
-        --------
-        str
-            Detected language code
-        """
-        try:
-            # We use a short transcription with verbose JSON to get language info
-            result = self.transcribe(audio_file, response_format="verbose_json")
-            
-            if isinstance(result, dict) and "language" in result:
-                return result["language"]
-            elif isinstance(result, str) and result.startswith("Error"):
-                return "unknown"
-            else:
-                return "unknown"
-                
-        except Exception as e:
-            print(f"Error detecting language: {e}")
-            return "unknown"

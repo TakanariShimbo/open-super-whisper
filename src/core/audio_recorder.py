@@ -87,39 +87,3 @@ class AudioRecorder:
     def is_recording(self):
         """Check if recording is in progress"""
         return self.recording
-
-    def load_audio_file(self, file_path):
-        """
-        Load an existing audio file and return its path, potentially converting it if needed
-        
-        Parameters:
-        -----------
-        file_path : str
-            Path to the audio file
-            
-        Returns:
-        --------
-        str or None
-            Path to the converted WAV file or None if conversion failed
-        """
-        try:
-            # Check if file exists
-            if not os.path.exists(file_path):
-                print(f"File not found: {file_path}")
-                return None
-                
-            # Generate a filename for the possibly converted file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = os.path.join(self.temp_dir, f"imported_{timestamp}.wav")
-            
-            # Read the audio file and convert if necessary
-            data, samplerate = sf.read(file_path)
-            
-            # Save as WAV
-            sf.write(output_path, data, samplerate)
-            
-            return output_path
-            
-        except Exception as e:
-            print(f"Error loading audio file: {e}")
-            return None
