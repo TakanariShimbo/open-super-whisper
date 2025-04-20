@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
     QSystemTrayIcon, QMenu, QStyle, QFrame
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl, QObject
 from PyQt6.QtGui import QIcon, QAction, QFont
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 import keyboard
@@ -1631,25 +1631,27 @@ class MainWindow(QMainWindow):
                 background-color: #FFFFFF;
                 border: 1px solid #E2E6EC;
                 border-radius: 4px;
-                padding: 2px;
+                padding: 4px;
+                font-family: "Segoe UI", Arial, sans-serif;
+                font-size: 13px;
+            }
+            
+            QMenu::item {
+                padding: 8px 16px;
+                margin: 2px 4px;
+                border-radius: 4px;
             }
             
             QMenu::item:selected {
                 background-color: #4968C2;
                 color: white;
-                border-radius: 3px;
-                padding: 3px 6px;
-            }
-            
-            QMenu::item {
-                padding: 3px 6px;
-                margin: 1px 3px;
+                border-radius: 4px;
             }
             
             QMenu::separator {
                 height: 1px;
                 background-color: #E2E6EC;
-                margin: 4px 8px;
+                margin: 6px 10px;
             }
         """)
         
