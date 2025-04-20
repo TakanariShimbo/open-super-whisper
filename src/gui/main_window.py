@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QTextEdit, QLabel, QComboBox, QFileDialog,
     QCheckBox, QLineEdit, QListWidget, QMessageBox, QSplitter,
     QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
-    QSystemTrayIcon, QMenu, QStyle
+    QSystemTrayIcon, QMenu, QStyle, QFrame
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
 from PyQt6.QtGui import QIcon, QAction, QFont
@@ -258,6 +258,165 @@ class SystemInstructionsDialog(QDialog):
         return [self.instructions_list.item(i).text() for i in range(self.instructions_list.count())]
 
 
+class StatusIndicatorWindow(QWidget):
+    """状態を示す小さなウィンドウ（録音中/文字起こし中/コピー完了）"""
+    
+    # 状態の定義
+    MODE_RECORDING = 0
+    MODE_TRANSCRIBING = 1
+    MODE_COPIED = 2
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        # ウィンドウ設定
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setFixedSize(150, 80)
+        
+        # レイアウト設定
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(8, 8, 8, 8)
+        
+        # 本体部分のレイアウト
+        self.frame = QFrame()
+        self.frame.setObjectName("statusFrame")
+        
+        layout = QVBoxLayout(self.frame)
+        layout.setContentsMargins(8, 10, 8, 10)
+        layout.setSpacing(4)
+        
+        # 状態テキスト
+        self.status_label = QLabel()
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status_label.setObjectName("statusLabel")
+        layout.addWidget(self.status_label)
+        
+        # 録音時間表示ラベル
+        self.timer_label = QLabel()
+        self.timer_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.timer_label.setObjectName("timerLabel")
+        layout.addWidget(self.timer_label)
+        
+        main_layout.addWidget(self.frame)
+        
+        # コピー完了時の自動非表示タイマー
+        self.auto_hide_timer = QTimer(self)
+        self.auto_hide_timer.setSingleShot(True)
+        self.auto_hide_timer.timeout.connect(self.hide)
+        
+        # スタイルシート設定
+        self.setStyleSheet("""
+            #statusFrame {
+                border-radius: 10px;
+                background-color: rgba(50, 50, 50, 180);
+                border: 1px solid rgba(255, 255, 255, 50);
+            }
+            
+            #statusLabel, #timerLabel {
+                color: white;
+                font-weight: bold;
+            }
+            
+            #statusLabel {
+                font-size: 16px;
+                padding: 5px 0;
+            }
+            
+            #timerLabel {
+                font-size: 20px;
+                font-family: "Courier New", monospace;
+            }
+            
+            /* 録音中モード */
+            #statusFrame[mode="recording"] {
+                background-color: rgba(220, 50, 50, 180);
+                border: 1px solid rgba(255, 100, 100, 70);
+            }
+            
+            /* 文字起こし中モード */
+            #statusFrame[mode="transcribing"] {
+                background-color: rgba(50, 100, 200, 180);
+                border: 1px solid rgba(100, 150, 255, 70);
+            }
+            
+            /* コピー完了モード */
+            #statusFrame[mode="copied"] {
+                background-color: rgba(50, 170, 50, 180);
+                border: 1px solid rgba(100, 220, 100, 70);
+            }
+        """)
+        
+        # 初期状態では非表示に設定
+        self.hide()
+        
+        # 現在のモードを記録する変数
+        self.current_mode = None
+        
+        # ウィンドウの位置を設定
+        self.position_window()
+        
+        # マウスドラッグ用の変数
+        self.drag_position = None
+        
+    def set_mode(self, mode):
+        """表示モードを設定する"""
+        self.current_mode = mode
+        
+        if mode == self.MODE_RECORDING:
+            self.status_label.setText("録音中")
+            self.setFixedSize(150, 90)  # 高さを増やして文字が切れないようにする
+            self.frame.setStyleSheet("background-color: rgba(231, 76, 60, 0.9); border-radius: 10px;")
+            self.status_label.setStyleSheet("color: white; font-weight: bold;")
+            self.timer_label.setStyleSheet("color: white;")
+            self.timer_label.show()
+        
+        elif mode == self.MODE_TRANSCRIBING:
+            self.status_label.setText("文字起こし中")
+            self.setFixedSize(150, 70)
+            self.frame.setStyleSheet("background-color: rgba(52, 152, 219, 0.9); border-radius: 10px;")
+            self.status_label.setStyleSheet("color: white; font-weight: bold;")
+            self.timer_label.hide()
+        
+        elif mode == self.MODE_COPIED:
+            self.status_label.setText("コピー完了")
+            self.setFixedSize(150, 70)
+            self.frame.setStyleSheet("background-color: rgba(46, 204, 113, 0.9); border-radius: 10px;")
+            self.status_label.setStyleSheet("color: white; font-weight: bold;")
+            self.timer_label.hide()
+            
+            # 3秒後に非表示
+            self.auto_hide_timer.start(3000)
+    
+    def position_window(self):
+        """ウィンドウを画面の右下に配置"""
+        screen_geometry = QApplication.primaryScreen().geometry()
+        window_geometry = self.geometry()
+        
+        # 画面の右下から少し内側に配置
+        x = screen_geometry.width() - window_geometry.width() - 20
+        y = screen_geometry.height() - window_geometry.height() - 100
+        
+        self.move(x, y)
+    
+    def update_timer(self, time_str):
+        """タイマー表示を更新（録音モード時）"""
+        if self.current_mode == self.MODE_RECORDING:
+            self.timer_label.setText(time_str)
+        
+    def mousePressEvent(self, event):
+        """ウィンドウのドラッグを可能にする"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            event.accept()
+            
+    def mouseMoveEvent(self, event):
+        """ウィンドウを移動"""
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            self.move(event.globalPosition().toPoint() - self.drag_position)
+            event.accept()
+
+
 class HotkeyDialog(QDialog):
     """Dialog to set global hotkey"""
     
@@ -325,11 +484,20 @@ class MainWindow(QMainWindow):
         # サウンド設定
         self.enable_sound = self.settings.value("enable_sound", True, type=bool)
         
+        # インジケータ表示設定（デフォルトON）
+        self.show_indicator = self.settings.value("show_indicator", True, type=bool)
+        
         # サウンドプレーヤーの初期化
         self.setup_sound_players()
         
         # Initialize components
         self.audio_recorder = AudioRecorder()
+        
+        # 状態表示ウィンドウ
+        self.status_indicator_window = StatusIndicatorWindow()
+        # 初期モードを録音中に設定
+        self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_RECORDING)
+        # 初期状態では表示しない - 録音開始時に表示する
         
         try:
             self.whisper_transcriber = WhisperTranscriber(api_key=self.api_key)
@@ -509,6 +677,13 @@ class MainWindow(QMainWindow):
         self.sound_action.triggered.connect(self.toggle_sound_option)
         toolbar.addAction(self.sound_action)
         
+        # インジケータ表示オプション
+        self.indicator_action = QAction("状態インジケータ", self)
+        self.indicator_action.setCheckable(True)
+        self.indicator_action.setChecked(self.show_indicator)
+        self.indicator_action.triggered.connect(self.toggle_indicator_option)
+        toolbar.addAction(self.indicator_action)
+        
         # Add separator
         toolbar.addSeparator()
         
@@ -589,6 +764,13 @@ class MainWindow(QMainWindow):
         self.recording_start_time = time.time()
         self.recording_timer.start(1000)  # Update every second
         
+        # 録音中状態の表示
+        if self.show_indicator:
+            # 念のため、一度ウィンドウを隠してリセット
+            self.status_indicator_window.hide()
+            self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_RECORDING)
+            self.status_indicator_window.show()
+        
         self.status_bar.showMessage("録音中...")
         
         # Play start sound
@@ -606,6 +788,9 @@ class MainWindow(QMainWindow):
         if audio_file:
             self.status_bar.showMessage("文字起こし中...")
             self.start_transcription(audio_file)
+        else:
+            # 録音ファイルが作成されなかった場合は状態表示を非表示
+            self.status_indicator_window.hide()
         
         # Play stop sound
         self.play_stop_sound()
@@ -623,27 +808,34 @@ class MainWindow(QMainWindow):
             elapsed = int(time.time() - self.recording_start_time)
             minutes = elapsed // 60
             seconds = elapsed % 60
-            self.recording_timer_label.setText(f"{minutes:02d}:{seconds:02d}")
-    
-    def start_transcription(self, audio_file):
-        """Start transcription in a separate thread"""
-        if not self.whisper_transcriber:
-            QMessageBox.warning(self, "エラー", "先にAPIキーを設定してください")
-            return
+            time_str = f"{minutes:02d}:{seconds:02d}"
+            self.recording_timer_label.setText(time_str)
             
-        # Get selected language or empty string for auto-detection
+            # 録音インジケーターウィンドウのタイマーも更新
+            self.status_indicator_window.update_timer(time_str)
+    
+    def start_transcription(self, audio_file=None):
+        """Start transcription"""
+        self.status_bar.showMessage("文字起こし中...")
+        
+        # 文字起こし中状態の表示
+        if self.show_indicator:
+            # 念のため、一度ウィンドウを隠してリセット
+            self.status_indicator_window.hide()
+            self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_TRANSCRIBING)
+            self.status_indicator_window.show()
+        
+        # 言語の選択
         selected_language = self.language_combo.currentData()
         
-        # 選択されたモデルを設定
-        selected_model = self.model_combo.currentData()
-        self.whisper_transcriber.set_model(selected_model)
-        
-        # Start transcription in a thread
-        threading.Thread(
-            target=self.perform_transcription,
-            args=(audio_file, selected_language),
-            daemon=True
-        ).start()
+        # バックグラウンドスレッドで文字起こし処理を実行
+        if audio_file:
+            transcription_thread = threading.Thread(
+                target=self.perform_transcription,
+                args=(audio_file, selected_language)
+            )
+            transcription_thread.daemon = True
+            transcription_thread.start()
     
     def perform_transcription(self, audio_file, language=None):
         """Perform the actual transcription in a background thread"""
@@ -674,6 +866,14 @@ class MainWindow(QMainWindow):
         if self.auto_copy and text:
             QApplication.clipboard().setText(text)
             self.status_bar.showMessage(f"文字起こしが完了し、クリップボードにコピーしました (使用モデル: {model_name})", 3000)
+            
+            # コピー完了状態の表示
+            if self.show_indicator:
+                self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_COPIED)
+                self.status_indicator_window.show()
+        else:
+            # 自動コピーが無効の場合は、ステータスインジケーターを非表示
+            self.status_indicator_window.hide()
         
         # Play complete sound
         self.play_complete_sound()
@@ -683,6 +883,11 @@ class MainWindow(QMainWindow):
         text = self.transcription_text.toPlainText()
         QApplication.clipboard().setText(text)
         self.status_bar.showMessage("クリップボードにコピーしました", 2000)
+        
+        # コピー完了状態の表示
+        if self.show_indicator:
+            self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_COPIED)
+            self.status_indicator_window.show()
     
     def setup_connections(self):
         """追加の接続設定"""
@@ -875,6 +1080,18 @@ class MainWindow(QMainWindow):
         self.settings.setValue("enable_sound", self.enable_sound)
         status = "有効" if self.enable_sound else "無効"
         self.status_bar.showMessage(f"通知音を{status}にしました", 2000)
+
+    def toggle_indicator_option(self):
+        """インジケータ表示のオン/オフを切り替える"""
+        self.show_indicator = self.indicator_action.isChecked()
+        self.settings.setValue("show_indicator", self.show_indicator)
+        
+        # インジケータが無効になったら非表示にする
+        if not self.show_indicator:
+            self.status_indicator_window.hide()
+            
+        status = "表示" if self.show_indicator else "非表示"
+        self.status_bar.showMessage(f"状態インジケータを{status}にしました", 2000)
 
 
 def main():
