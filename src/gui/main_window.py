@@ -23,12 +23,23 @@ import keyboard
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
 
-# define hotkey settings
+# ホットキー設定のデフォルト値
 DEFAULT_HOTKEY = "ctrl+shift+r"
 
-# PyInstallerでパス解決を行うヘルパー関数
 def getResourcePath(relative_path):
-    """PyInstallerでバンドルされている場合や通常実行時のリソースパスを解決します"""
+    """
+    PyInstallerでバンドルされている場合や通常実行時のリソースパスを解決する
+    
+    Parameters
+    ----------
+    relative_path : str
+        取得したいリソースの相対パス
+        
+    Returns
+    -------
+    str
+        解決された絶対パス
+    """
     try:
         # PyInstallerでバンドルされている場合
         base_path = getattr(sys, '_MEIPASS', None)
@@ -49,9 +60,23 @@ def getResourcePath(relative_path):
         return relative_path
 
 class APIKeyDialog(QDialog):
-    """Dialog to enter OpenAI API key"""
+    """
+    OpenAI APIキーを入力するためのダイアログ
+    
+    APIキーの入力、保存、表示を管理するダイアログウィンドウ
+    """
     
     def __init__(self, parent=None, api_key=None):
+        """
+        APIKeyDialogの初期化
+        
+        Parameters
+        ----------
+        parent : QWidget, optional
+            親ウィジェット
+        api_key : str, optional
+            初期表示するAPIキー
+        """
         super().__init__(parent)
         self.setWindowTitle("OpenAI APIキー")
         self.setMinimumWidth(400)
@@ -146,14 +171,35 @@ class APIKeyDialog(QDialog):
         self.setLayout(layout)
     
     def get_api_key(self):
-        """Return the entered API key"""
+        """
+        入力されたAPIキーを返す
+        
+        Returns
+        -------
+        str
+            入力されたAPIキー
+        """
         return self.api_key_input.text()
 
 
 class VocabularyDialog(QDialog):
-    """Dialog to manage custom vocabulary"""
+    """
+    カスタム語彙管理のためのダイアログ
+    
+    文字起こし精度向上のためのカスタム語彙を追加・管理するダイアログウィンドウ
+    """
     
     def __init__(self, parent=None, vocabulary=None):
+        """
+        VocabularyDialogの初期化
+        
+        Parameters
+        ----------
+        parent : QWidget, optional
+            親ウィジェット
+        vocabulary : list, optional
+            初期表示する語彙のリスト
+        """
         super().__init__(parent)
         self.setWindowTitle("カスタム語彙")
         self.setMinimumWidth(450)
@@ -319,7 +365,9 @@ class VocabularyDialog(QDialog):
         self.setLayout(layout)
     
     def add_term(self):
-        """Add a new term to the vocabulary list"""
+        """
+        語彙リストに新しい単語を追加する
+        """
         term = self.term_input.text().strip()
         if term:
             self.vocabulary_list.addItem(term)
@@ -327,24 +375,50 @@ class VocabularyDialog(QDialog):
             self.term_input.setFocus()
     
     def remove_term(self):
-        """Remove the selected term from the vocabulary list"""
+        """
+        選択された単語を語彙リストから削除する
+        """
         selected_items = self.vocabulary_list.selectedItems()
         for item in selected_items:
             self.vocabulary_list.takeItem(self.vocabulary_list.row(item))
     
     def clear_terms(self):
-        """Clear all terms from the vocabulary list"""
+        """
+        語彙リストからすべての単語を削除する
+        """
         self.vocabulary_list.clear()
     
     def get_vocabulary(self):
-        """Return the list of vocabulary terms"""
+        """
+        語彙リストの単語を取得する
+        
+        Returns
+        -------
+        list
+            すべての語彙単語のリスト
+        """
         return [self.vocabulary_list.item(i).text() for i in range(self.vocabulary_list.count())]
 
 
 class SystemInstructionsDialog(QDialog):
-    """システム指示を管理するダイアログ"""
+    """
+    システム指示を管理するためのダイアログ
+    
+    文字起こしの精度やフォーマットを向上させるためのシステム指示を
+    追加・管理するためのダイアログウィンドウ
+    """
     
     def __init__(self, parent=None, instructions=None):
+        """
+        SystemInstructionsDialogの初期化
+        
+        Parameters
+        ----------
+        parent : QWidget, optional
+            親ウィジェット
+        instructions : list, optional
+            初期表示する指示のリスト
+        """
         super().__init__(parent)
         self.setWindowTitle("システム指示")
         self.setMinimumWidth(500)
@@ -531,7 +605,9 @@ class SystemInstructionsDialog(QDialog):
         self.setLayout(layout)
     
     def add_instruction(self):
-        """新しい指示を追加"""
+        """
+        システム指示リストに新しい指示を追加する
+        """
         instruction = self.instruction_input.text().strip()
         if instruction:
             self.instructions_list.addItem(instruction)
@@ -539,22 +615,38 @@ class SystemInstructionsDialog(QDialog):
             self.instruction_input.setFocus()
     
     def remove_instruction(self):
-        """選択された指示を削除"""
+        """
+        選択された指示をシステム指示リストから削除する
+        """
         selected_items = self.instructions_list.selectedItems()
         for item in selected_items:
             self.instructions_list.takeItem(self.instructions_list.row(item))
     
     def clear_instructions(self):
-        """全ての指示を削除"""
+        """
+        システム指示リストからすべての指示を削除する
+        """
         self.instructions_list.clear()
     
     def get_instructions(self):
-        """指示リストを返す"""
+        """
+        システム指示リストの指示を取得する
+        
+        Returns
+        -------
+        list
+            すべてのシステム指示のリスト
+        """
         return [self.instructions_list.item(i).text() for i in range(self.instructions_list.count())]
 
 
 class StatusIndicatorWindow(QWidget):
-    """状態を示す小さなウィンドウ（録音中/文字起こし中/コピー完了）"""
+    """
+    アプリケーションの状態を表示する小さなウィンドウ
+    
+    録音中、文字起こし中、コピー完了などの状態を視覚的に
+    ユーザーに伝えるためのフローティングウィンドウです。
+    """
     
     # 状態の定義
     MODE_RECORDING = 0
@@ -562,6 +654,14 @@ class StatusIndicatorWindow(QWidget):
     MODE_COPIED = 2
     
     def __init__(self, parent=None):
+        """
+        StatusIndicatorWindowの初期化
+        
+        Parameters
+        ----------
+        parent : QWidget, optional
+            親ウィジェット
+        """
         super().__init__(parent)
         
         # ウィンドウ設定
@@ -641,7 +741,14 @@ class StatusIndicatorWindow(QWidget):
         self.drag_position = None
         
     def set_mode(self, mode):
-        """表示モードを設定する"""
+        """
+        表示モードを設定する
+        
+        Parameters
+        ----------
+        mode : int
+            表示モード（MODE_RECORDING, MODE_TRANSCRIBING, MODE_COPIED）
+        """
         self.current_mode = mode
         
         if mode == self.MODE_RECORDING:
@@ -728,9 +835,23 @@ class StatusIndicatorWindow(QWidget):
 
 
 class HotkeyDialog(QDialog):
-    """Dialog to set global hotkey"""
+    """
+    グローバルホットキー設定を管理するダイアログ
+    
+    録音の開始/停止に使用するグローバルホットキーを設定するためのダイアログウィンドウ
+    """
     
     def __init__(self, parent=None, current_hotkey=None):
+        """
+        HotkeyDialogの初期化
+        
+        Parameters
+        ----------
+        parent : QWidget, optional
+            親ウィジェット
+        current_hotkey : str, optional
+            現在設定されているホットキー
+        """
         super().__init__(parent)
         self.setWindowTitle("グローバルホットキー設定")
         self.setMinimumWidth(400)
@@ -825,14 +946,26 @@ class HotkeyDialog(QDialog):
         self.setLayout(layout)
     
     def get_hotkey(self):
-        """Return the entered hotkey"""
+        """
+        入力されたホットキーを返す
+        
+        Returns
+        -------
+        str
+            入力されたホットキー文字列
+        """
         return self.hotkey_input.text()
 
 
 class MainWindow(QMainWindow):
-    """Main application window"""
+    """
+    アプリケーションのメインウィンドウ
     
-    # Define custom signals
+    ユーザーインターフェース、音声録音機能、文字起こし機能を統合した
+    アプリケーションの中心となるウィンドウです。
+    """
+    
+    # カスタムシグナルの定義
     transcription_complete = pyqtSignal(str)
     recording_status_changed = pyqtSignal(bool)
     
@@ -891,7 +1024,12 @@ class MainWindow(QMainWindow):
         self.setup_system_tray()
     
     def init_ui(self):
-        """Initialize the user interface"""
+        """
+        ユーザーインターフェースを初期化する
+        
+        ウィンドウのサイズ、タイトル、スタイル、レイアウト、
+        およびウィジェットの配置を設定します。
+        """
         self.setWindowTitle("Open Super Whisper")
         self.setMinimumSize(800, 600)
         
@@ -1762,7 +1900,11 @@ class MainWindow(QMainWindow):
         self.complete_player.setAudioOutput(self.complete_audio_output)
     
     def play_start_sound(self):
-        """録音開始サウンドを再生"""
+        """
+        録音開始サウンドを再生する
+        
+        enable_soundがTrueの場合のみ再生します
+        """
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
@@ -1772,7 +1914,11 @@ class MainWindow(QMainWindow):
         self.start_player.play()
     
     def play_stop_sound(self):
-        """録音終了サウンドを再生"""
+        """
+        録音終了サウンドを再生する
+        
+        enable_soundがTrueの場合のみ再生します
+        """
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
@@ -1782,7 +1928,11 @@ class MainWindow(QMainWindow):
         self.stop_player.play()
     
     def play_complete_sound(self):
-        """文字起こし完了サウンドを再生"""
+        """
+        文字起こし完了サウンドを再生する
+        
+        enable_soundがTrueの場合のみ再生します
+        """
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
@@ -1792,14 +1942,22 @@ class MainWindow(QMainWindow):
         self.complete_player.play()
 
     def toggle_sound_option(self):
-        """通知音のオン/オフを切り替える"""
+        """
+        通知音のオン/オフを切り替える
+        
+        設定を保存し、状態をステータスバーに表示します
+        """
         self.enable_sound = self.sound_action.isChecked()
         self.settings.setValue("enable_sound", self.enable_sound)
         status = "有効" if self.enable_sound else "無効"
         self.status_bar.showMessage(f"通知音を{status}にしました", 2000)
 
     def toggle_indicator_option(self):
-        """インジケータ表示のオン/オフを切り替える"""
+        """
+        インジケータ表示のオン/オフを切り替える
+        
+        設定を保存し、状態をステータスバーに表示します
+        """
         self.show_indicator = self.indicator_action.isChecked()
         self.settings.setValue("show_indicator", self.show_indicator)
         
@@ -1812,7 +1970,17 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    """Application entry point"""
+    """
+    アプリケーションのエントリーポイント
+    
+    アプリケーションの初期化、設定、メインウィンドウの表示を行います。
+    コマンドライン引数に応じて、最小化状態で起動することも可能です。
+    
+    Returns
+    -------
+    int
+        アプリケーションの終了コード
+    """
     app = QApplication(sys.argv)
     
     # アプリケーションアイコンを設定
