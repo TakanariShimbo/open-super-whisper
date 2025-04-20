@@ -56,10 +56,62 @@ class APIKeyDialog(QDialog):
         self.setWindowTitle("OpenAI APIキー")
         self.setMinimumWidth(400)
         
+        # スタイルシートを設定
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #F8F9FC;
+            }
+            
+            QLineEdit {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                padding: 8px;
+                background-color: white;
+            }
+            
+            QLineEdit:focus {
+                border-color: #5B7FDE;
+            }
+            
+            QPushButton {
+                background-color: #5B7FDE;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            
+            QPushButton:hover {
+                background-color: #4968C2;
+            }
+            
+            QPushButton:pressed {
+                background-color: #3A5CB8;
+            }
+            
+            QPushButton#cancelButton {
+                background-color: #F2F4F8;
+                color: #333333;
+                border: 1px solid #E2E6EC;
+            }
+            
+            QPushButton#cancelButton:hover {
+                background-color: #E8ECF2;
+            }
+            
+            QPushButton#cancelButton:pressed {
+                background-color: #D8DDE8;
+            }
+        """)
+        
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
         
         # API key input
         form_layout = QFormLayout()
+        form_layout.setSpacing(10)
         self.api_key_input = QLineEdit()
         if api_key:
             self.api_key_input.setText(api_key)
@@ -74,13 +126,17 @@ class APIKeyDialog(QDialog):
             "お持ちでない場合は、https://platform.openai.com/api-keys から取得できます。"
         )
         info_label.setWordWrap(True)
+        info_label.setStyleSheet("color: #555555; padding: 5px 0;")
         layout.addWidget(info_label)
         
         # Buttons
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
         self.save_button = QPushButton("保存")
         self.save_button.clicked.connect(self.accept)
+        
         self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.setObjectName("cancelButton")
         self.cancel_button.clicked.connect(self.reject)
         
         button_layout.addWidget(self.cancel_button)
@@ -100,10 +156,111 @@ class VocabularyDialog(QDialog):
     def __init__(self, parent=None, vocabulary=None):
         super().__init__(parent)
         self.setWindowTitle("カスタム語彙")
-        self.setMinimumWidth(400)
-        self.setMinimumHeight(300)
+        self.setMinimumWidth(450)
+        self.setMinimumHeight(350)
+        
+        # スタイルシートを設定
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #F8F9FC;
+            }
+            
+            QListWidget {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                background-color: white;
+                padding: 4px;
+            }
+            
+            QListWidget::item {
+                padding: 6px;
+                border-bottom: 1px solid #F2F4F8;
+            }
+            
+            QListWidget::item:selected {
+                background-color: #EBF0FF;
+                color: #5B7FDE;
+                border-radius: 2px;
+            }
+            
+            QLineEdit {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                padding: 8px 12px;
+                background-color: white;
+                font-size: 13px;
+                min-height: 20px;
+            }
+            
+            QLineEdit:focus {
+                border-color: #5B7FDE;
+            }
+            
+            QPushButton {
+                background-color: #5B7FDE;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+                min-height: 20px;
+            }
+            
+            QPushButton:hover {
+                background-color: #4968C2;
+            }
+            
+            QPushButton:pressed {
+                background-color: #3A5CB8;
+            }
+            
+            QPushButton.secondary {
+                background-color: #F2F4F8;
+                color: #333333;
+                border: 1px solid #E2E6EC;
+            }
+            
+            QPushButton.secondary:hover {
+                background-color: #E8ECF2;
+            }
+            
+            QPushButton.secondary:pressed {
+                background-color: #D8DDE8;
+            }
+            
+            QPushButton.danger {
+                background-color: #E05252;
+            }
+            
+            QPushButton.danger:hover {
+                background-color: #D03A3A;
+            }
+            
+            QPushButton.danger:pressed {
+                background-color: #C02E2E;
+            }
+            
+            QLabel {
+                color: #333333;
+                font-size: 13px;
+            }
+            
+            QLabel.sectionTitle {
+                font-weight: bold;
+                font-size: 14px;
+                color: #324275;
+                padding: 5px 0;
+            }
+        """)
         
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # タイトルラベル
+        title_label = QLabel("カスタム語彙の単語")
+        title_label.setProperty("class", "sectionTitle")
+        layout.addWidget(title_label)
         
         # Vocabulary list
         self.vocabulary_list = QListWidget()
@@ -111,25 +268,33 @@ class VocabularyDialog(QDialog):
             for term in vocabulary:
                 self.vocabulary_list.addItem(term)
         
-        layout.addWidget(QLabel("カスタム語彙の単語:"))
         layout.addWidget(self.vocabulary_list)
         
         # Add term interface
         add_layout = QHBoxLayout()
+        add_layout.setSpacing(8)
+        
         self.term_input = QLineEdit()
         self.term_input.setPlaceholderText("新しい単語を入力...")
+        
         self.add_button = QPushButton("追加")
+        self.add_button.setFixedWidth(80)
         self.add_button.clicked.connect(self.add_term)
         
-        add_layout.addWidget(self.term_input)
-        add_layout.addWidget(self.add_button)
+        add_layout.addWidget(self.term_input, 1)
+        add_layout.addWidget(self.add_button, 0)
         layout.addLayout(add_layout)
         
         # Action buttons
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(8)
+        
         self.remove_button = QPushButton("選択項目を削除")
+        self.remove_button.setProperty("class", "secondary")
         self.remove_button.clicked.connect(self.remove_term)
+        
         self.clear_button = QPushButton("すべて削除")
+        self.clear_button.setProperty("class", "danger")
         self.clear_button.clicked.connect(self.clear_terms)
         
         button_layout.addWidget(self.remove_button)
@@ -138,9 +303,13 @@ class VocabularyDialog(QDialog):
         
         # Dialog buttons
         dialog_buttons = QHBoxLayout()
+        dialog_buttons.setSpacing(10)
+        
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.accept)
+        
         self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.setProperty("class", "secondary")
         self.cancel_button.clicked.connect(self.reject)
         
         dialog_buttons.addWidget(self.cancel_button)
@@ -155,6 +324,7 @@ class VocabularyDialog(QDialog):
         if term:
             self.vocabulary_list.addItem(term)
             self.term_input.clear()
+            self.term_input.setFocus()
     
     def remove_term(self):
         """Remove the selected term from the vocabulary list"""
@@ -180,7 +350,114 @@ class SystemInstructionsDialog(QDialog):
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
         
+        # スタイルシートを設定
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #F8F9FC;
+            }
+            
+            QListWidget {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                background-color: white;
+                padding: 4px;
+            }
+            
+            QListWidget::item {
+                padding: 6px;
+                border-bottom: 1px solid #F2F4F8;
+            }
+            
+            QListWidget::item:selected {
+                background-color: #EBF0FF;
+                color: #5B7FDE;
+                border-radius: 2px;
+            }
+            
+            QLineEdit {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                padding: 8px 12px;
+                background-color: white;
+                font-size: 13px;
+                min-height: 20px;
+            }
+            
+            QLineEdit:focus {
+                border-color: #5B7FDE;
+            }
+            
+            QPushButton {
+                background-color: #5B7FDE;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+                min-height: 20px;
+            }
+            
+            QPushButton:hover {
+                background-color: #4968C2;
+            }
+            
+            QPushButton:pressed {
+                background-color: #3A5CB8;
+            }
+            
+            QPushButton.secondary {
+                background-color: #F2F4F8;
+                color: #333333;
+                border: 1px solid #E2E6EC;
+            }
+            
+            QPushButton.secondary:hover {
+                background-color: #E8ECF2;
+            }
+            
+            QPushButton.secondary:pressed {
+                background-color: #D8DDE8;
+            }
+            
+            QPushButton.danger {
+                background-color: #E05252;
+            }
+            
+            QPushButton.danger:hover {
+                background-color: #D03A3A;
+            }
+            
+            QPushButton.danger:pressed {
+                background-color: #C02E2E;
+            }
+            
+            QLabel {
+                color: #333333;
+                font-size: 13px;
+            }
+            
+            QLabel.sectionTitle {
+                font-weight: bold;
+                font-size: 14px;
+                color: #324275;
+                padding: 5px 0;
+            }
+            
+            QLabel.info {
+                color: #555555;
+                padding-bottom: 10px;
+                line-height: 1.4;
+            }
+        """)
+        
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # タイトルとガイダンス
+        title_label = QLabel("システム指示")
+        title_label.setProperty("class", "sectionTitle")
+        layout.addWidget(title_label)
         
         # 説明ラベル
         info_label = QLabel(
@@ -190,33 +467,46 @@ class SystemInstructionsDialog(QDialog):
             "- \"段落に分けてください\""
         )
         info_label.setWordWrap(True)
+        info_label.setProperty("class", "info")
         layout.addWidget(info_label)
         
         # 指示リスト
+        instructions_label = QLabel("システム指示リスト:")
+        instructions_label.setProperty("class", "sectionTitle")
+        layout.addWidget(instructions_label)
+        
         self.instructions_list = QListWidget()
         if instructions:
             for instruction in instructions:
                 self.instructions_list.addItem(instruction)
         
-        layout.addWidget(QLabel("システム指示:"))
         layout.addWidget(self.instructions_list)
         
         # 指示追加インターフェース
         add_layout = QHBoxLayout()
+        add_layout.setSpacing(8)
+        
         self.instruction_input = QLineEdit()
         self.instruction_input.setPlaceholderText("新しい指示を入力...")
+        
         self.add_button = QPushButton("追加")
+        self.add_button.setFixedWidth(80)
         self.add_button.clicked.connect(self.add_instruction)
         
-        add_layout.addWidget(self.instruction_input)
-        add_layout.addWidget(self.add_button)
+        add_layout.addWidget(self.instruction_input, 1)
+        add_layout.addWidget(self.add_button, 0)
         layout.addLayout(add_layout)
         
         # アクションボタン
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(8)
+        
         self.remove_button = QPushButton("選択項目を削除")
+        self.remove_button.setProperty("class", "secondary")
         self.remove_button.clicked.connect(self.remove_instruction)
+        
         self.clear_button = QPushButton("すべて削除")
+        self.clear_button.setProperty("class", "danger")
         self.clear_button.clicked.connect(self.clear_instructions)
         
         button_layout.addWidget(self.remove_button)
@@ -225,9 +515,13 @@ class SystemInstructionsDialog(QDialog):
         
         # ダイアログボタン
         dialog_buttons = QHBoxLayout()
+        dialog_buttons.setSpacing(10)
+        
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.accept)
+        
         self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.setProperty("class", "secondary")
         self.cancel_button.clicked.connect(self.reject)
         
         dialog_buttons.addWidget(self.cancel_button)
@@ -242,6 +536,7 @@ class SystemInstructionsDialog(QDialog):
         if instruction:
             self.instructions_list.addItem(instruction)
             self.instruction_input.clear()
+            self.instruction_input.setFocus()
     
     def remove_instruction(self):
         """選択された指示を削除"""
@@ -310,9 +605,9 @@ class StatusIndicatorWindow(QWidget):
             #statusFrame {
                 border-radius: 12px;
                 background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                         stop:0 rgba(60, 60, 60, 220), 
-                                         stop:1 rgba(40, 40, 40, 220));
-                border: 1px solid rgba(255, 255, 255, 40);
+                                         stop:0 rgba(90, 100, 120, 220), 
+                                         stop:1 rgba(70, 78, 94, 220));
+                border: 1px solid rgba(255, 255, 255, 60);
             }
             
             #statusLabel {
@@ -360,10 +655,9 @@ class StatusIndicatorWindow(QWidget):
                 #statusFrame {
                     border-radius: 12px;
                     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                             stop:0 rgba(220, 60, 60, 220), 
-                                             stop:1 rgba(180, 40, 40, 220));
-                    border: 1px solid rgba(255, 100, 100, 80);
-                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                                             stop:0 rgba(224, 82, 82, 220), 
+                                             stop:1 rgba(192, 46, 46, 220));
+                    border: 1px solid rgba(255, 255, 255, 60);
                 }
             """)
         
@@ -373,15 +667,14 @@ class StatusIndicatorWindow(QWidget):
             self.timer_label.setText("")
             self.timer_label.hide()
             
-            # 文字起こし中のスタイル - 青系のグラデーション
+            # 文字起こし中のスタイル - グレー系のグラデーション
             self.frame.setStyleSheet("""
                 #statusFrame {
                     border-radius: 12px;
                     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                             stop:0 rgba(60, 120, 220, 220), 
-                                             stop:1 rgba(40, 80, 180, 220));
-                    border: 1px solid rgba(100, 150, 255, 80);
-                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                                             stop:0 rgba(100, 110, 130, 220), 
+                                             stop:1 rgba(80, 88, 104, 220));
+                    border: 1px solid rgba(255, 255, 255, 60);
                 }
             """)
         
@@ -391,15 +684,14 @@ class StatusIndicatorWindow(QWidget):
             self.timer_label.setText("")
             self.timer_label.hide()
             
-            # コピー完了のスタイル - 緑系のグラデーション
+            # コピー完了のスタイル - 青系のグラデーション
             self.frame.setStyleSheet("""
                 #statusFrame {
                     border-radius: 12px;
                     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                             stop:0 rgba(60, 180, 60, 220), 
-                                             stop:1 rgba(40, 150, 40, 220));
-                    border: 1px solid rgba(100, 220, 100, 80);
-                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                                             stop:0 rgba(91, 127, 222, 220), 
+                                             stop:1 rgba(73, 104, 194, 220));
+                    border: 1px solid rgba(255, 255, 255, 60);
                 }
             """)
             
@@ -443,10 +735,62 @@ class HotkeyDialog(QDialog):
         self.setWindowTitle("グローバルホットキー設定")
         self.setMinimumWidth(400)
         
+        # スタイルシートを設定
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #F8F9FC;
+            }
+            
+            QLineEdit {
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                padding: 8px;
+                background-color: white;
+            }
+            
+            QLineEdit:focus {
+                border-color: #5B7FDE;
+            }
+            
+            QPushButton {
+                background-color: #5B7FDE;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            
+            QPushButton:hover {
+                background-color: #4968C2;
+            }
+            
+            QPushButton:pressed {
+                background-color: #3A5CB8;
+            }
+            
+            QPushButton#cancelButton {
+                background-color: #F2F4F8;
+                color: #333333;
+                border: 1px solid #E2E6EC;
+            }
+            
+            QPushButton#cancelButton:hover {
+                background-color: #E8ECF2;
+            }
+            
+            QPushButton#cancelButton:pressed {
+                background-color: #D8DDE8;
+            }
+        """)
+        
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
         
         # Hotkey input
         form_layout = QFormLayout()
+        form_layout.setSpacing(10)
         self.hotkey_input = QLineEdit()
         if current_hotkey:
             self.hotkey_input.setText(current_hotkey)
@@ -461,13 +805,17 @@ class HotkeyDialog(QDialog):
             "例: ctrl+shift+r, alt+w など"
         )
         info_label.setWordWrap(True)
+        info_label.setStyleSheet("color: #555555; padding: 5px 0;")
         layout.addWidget(info_label)
         
         # Buttons
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
         self.save_button = QPushButton("保存")
         self.save_button.clicked.connect(self.accept)
+        
         self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.setObjectName("cancelButton")
         self.cancel_button.clicked.connect(self.reject)
         
         button_layout.addWidget(self.cancel_button)
@@ -565,12 +913,12 @@ class MainWindow(QMainWindow):
             }
             
             QMainWindow {
-                background-color: #F5F5F7;
+                background-color: #F8F9FC;
             }
             
             QToolBar {
-                background-color: #F0F0F2;
-                border-bottom: 1px solid #DDDDDF;
+                background-color: #FFFFFF;
+                border-bottom: 1px solid #E8ECF2;
                 spacing: 5px;
                 padding: 5px;
                 font-size: 13px;
@@ -580,8 +928,37 @@ class MainWindow(QMainWindow):
                 padding: 4px 8px;
             }
             
+            /* メニュー選択時の色を変更 */
+            QMenu {
+                background-color: #FFFFFF;
+                border: 1px solid #E2E6EC;
+            }
+            
+            QMenu::item {
+                padding: 5px 18px 5px 8px;
+            }
+            
+            QMenu::item:selected {
+                background-color: #5B7FDE;
+                color: white;
+            }
+            
+            QMenu::separator {
+                height: 1px;
+                background-color: #E2E6EC;
+                margin: 4px 8px;
+            }
+            
+            /* ツールバーの選択色 */
+            QToolBar QAction:checked {
+                background-color: #EBF0FF;
+                border: 1px solid #5B7FDE;
+                border-radius: 3px;
+                color: #5B7FDE;
+            }
+            
             QPushButton {
-                background-color: #3B82F6;
+                background-color: #5B7FDE;
                 color: white;
                 border: none;
                 border-radius: 4px;
@@ -591,15 +968,15 @@ class MainWindow(QMainWindow):
             }
             
             QPushButton:hover {
-                background-color: #2563EB;
+                background-color: #4968C2;
             }
             
             QPushButton:pressed {
-                background-color: #1D4ED8;
+                background-color: #3A5CB8;
             }
             
             QTextEdit {
-                border: 1px solid #DDDDDF;
+                border: 1px solid #E2E6EC;
                 border-radius: 4px;
                 background-color: white;
                 padding: 8px;
@@ -607,7 +984,7 @@ class MainWindow(QMainWindow):
             }
             
             QComboBox {
-                border: 1px solid #DDDDDF;
+                border: 1px solid #E2E6EC;
                 border-radius: 4px;
                 padding: 6px 12px;
                 background-color: white;
@@ -615,7 +992,7 @@ class MainWindow(QMainWindow):
             }
             
             QComboBox:hover {
-                border-color: #BBBBBB;
+                border-color: #C5CFDC;
             }
             
             QComboBox::drop-down {
@@ -625,10 +1002,18 @@ class MainWindow(QMainWindow):
                 border-left: none;
             }
             
+            /* コンボボックスのドロップダウンメニュー */
+            QComboBox QAbstractItemView {
+                background-color: white;
+                border: 1px solid #E2E6EC;
+                selection-background-color: #5B7FDE;
+                selection-color: white;
+            }
+            
             QStatusBar {
-                background-color: #F0F0F2;
+                background-color: #FFFFFF;
                 color: #555555;
-                border-top: 1px solid #DDDDDF;
+                border-top: 1px solid #E8ECF2;
                 font-size: 13px;
             }
             
@@ -654,7 +1039,8 @@ class MainWindow(QMainWindow):
             #controlPanel {
                 background-color: white;
                 border-radius: 8px;
-                border: 1px solid #DDDDDF;
+                border: 1px solid #E2E6EC;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             }
         """)
         control_layout = QGridLayout()
@@ -668,21 +1054,24 @@ class MainWindow(QMainWindow):
         self.record_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.record_button.setStyleSheet("""
             #recordButton {
-                background-color: #3B82F6;
+                background-color: #5B7FDE;
                 color: white;
                 border: none;
                 border-radius: 6px;
                 padding: 8px 20px;
                 font-weight: bold;
                 font-size: 14px;
+                box-shadow: 0 2px 4px rgba(91, 127, 222, 0.2);
             }
             
             #recordButton:hover {
-                background-color: #2563EB;
+                background-color: #4968C2;
+                box-shadow: 0 3px 5px rgba(91, 127, 222, 0.3);
             }
             
             #recordButton:pressed {
-                background-color: #1D4ED8;
+                background-color: #3A5CB8;
+                box-shadow: 0 1px 2px rgba(91, 127, 222, 0.2);
             }
         """)
         self.record_button.clicked.connect(self.toggle_recording)
@@ -759,7 +1148,8 @@ class MainWindow(QMainWindow):
             #transcriptionPanel {
                 background-color: white;
                 border-radius: 8px;
-                border: 1px solid #DDDDDF;
+                border: 1px solid #E2E6EC;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             }
         """)
         
@@ -773,7 +1163,7 @@ class MainWindow(QMainWindow):
             #sectionTitle {
                 font-weight: bold;
                 font-size: 15px;
-                color: #333333;
+                color: #324275;
                 padding-bottom: 8px;
             }
         """)
@@ -786,12 +1176,13 @@ class MainWindow(QMainWindow):
         self.transcription_text.setMinimumHeight(250)
         self.transcription_text.setStyleSheet("""
             QTextEdit {
-                border: 1px solid #E5E7EB;
+                border: 1px solid #E2E6EC;
                 border-radius: 4px;
-                background-color: #FAFAFA;
+                background-color: #FBFCFE;
                 padding: 12px;
                 font-size: 14px;
                 line-height: 1.6;
+                color: #333333;
             }
         """)
         
@@ -1004,7 +1395,7 @@ class MainWindow(QMainWindow):
         """Update the recording indicator"""
         if is_recording:
             self.recording_indicator.setStyleSheet("""
-                color: #E53E3E;
+                color: #5B7FDE;
                 font-size: 18px;
                 font-weight: bold;
                 animation: pulse 1.5s infinite;
@@ -1019,44 +1410,50 @@ class MainWindow(QMainWindow):
             # 録音ボタンのスタイルも変更
             self.record_button.setStyleSheet("""
                 #recordButton {
-                    background-color: #E53E3E;
+                    background-color: #E05252;
                     color: white;
                     border: none;
                     border-radius: 6px;
                     padding: 8px 20px;
                     font-weight: bold;
                     font-size: 14px;
+                    box-shadow: 0 2px 4px rgba(224, 82, 82, 0.2);
                 }
                 
                 #recordButton:hover {
-                    background-color: #C53030;
+                    background-color: #D03A3A;
+                    box-shadow: 0 3px 5px rgba(224, 82, 82, 0.3);
                 }
                 
                 #recordButton:pressed {
-                    background-color: #9B2C2C;
+                    background-color: #C02E2E;
+                    box-shadow: 0 1px 2px rgba(224, 82, 82, 0.2);
                 }
             """)
         else:
-            self.recording_indicator.setStyleSheet("color: gray; font-size: 16px;")
+            self.recording_indicator.setStyleSheet("color: #C5CFDC; font-size: 16px;")
             
             # 録音ボタンのスタイルを元に戻す
             self.record_button.setStyleSheet("""
                 #recordButton {
-                    background-color: #3B82F6;
+                    background-color: #5B7FDE;
                     color: white;
                     border: none;
                     border-radius: 6px;
                     padding: 8px 20px;
                     font-weight: bold;
                     font-size: 14px;
+                    box-shadow: 0 2px 4px rgba(91, 127, 222, 0.2);
                 }
                 
                 #recordButton:hover {
-                    background-color: #2563EB;
+                    background-color: #4968C2;
+                    box-shadow: 0 3px 5px rgba(91, 127, 222, 0.3);
                 }
                 
                 #recordButton:pressed {
-                    background-color: #1D4ED8;
+                    background-color: #3A5CB8;
+                    box-shadow: 0 1px 2px rgba(91, 127, 222, 0.2);
                 }
             """)
     
@@ -1193,8 +1590,31 @@ class MainWindow(QMainWindow):
         
         self.tray_icon.setToolTip("Open Super Whisper")
         
-        # Create tray menu
+        # Create tray menu with style
         menu = QMenu()
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #FFFFFF;
+                border: 1px solid #E2E6EC;
+                border-radius: 4px;
+                padding: 2px;
+            }
+            
+            QMenu::item {
+                padding: 5px 18px 5px 8px;
+            }
+            
+            QMenu::item:selected {
+                background-color: #5B7FDE;
+                color: white;
+            }
+            
+            QMenu::separator {
+                height: 1px;
+                background-color: #E2E6EC;
+                margin: 4px 8px;
+            }
+        """)
         
         # Add show/hide action
         show_action = QAction("表示", self)
