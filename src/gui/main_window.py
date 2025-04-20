@@ -272,7 +272,7 @@ class StatusIndicatorWindow(QWidget):
         # ウィンドウ設定
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setFixedSize(150, 80)
+        self.setFixedSize(150, 90)
         
         # レイアウト設定
         main_layout = QVBoxLayout(self)
@@ -283,7 +283,7 @@ class StatusIndicatorWindow(QWidget):
         self.frame.setObjectName("statusFrame")
         
         layout = QVBoxLayout(self.frame)
-        layout.setContentsMargins(8, 10, 8, 10)
+        layout.setContentsMargins(8, 12, 8, 12)
         layout.setSpacing(4)
         
         # 状態テキスト
@@ -308,42 +308,28 @@ class StatusIndicatorWindow(QWidget):
         # スタイルシート設定
         self.setStyleSheet("""
             #statusFrame {
-                border-radius: 10px;
-                background-color: rgba(50, 50, 50, 180);
-                border: 1px solid rgba(255, 255, 255, 50);
-            }
-            
-            #statusLabel, #timerLabel {
-                color: white;
-                font-weight: bold;
+                border-radius: 12px;
+                background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                         stop:0 rgba(60, 60, 60, 220), 
+                                         stop:1 rgba(40, 40, 40, 220));
+                border: 1px solid rgba(255, 255, 255, 40);
             }
             
             #statusLabel {
-                font-size: 16px;
-                padding: 5px 0;
+                color: white;
+                font-weight: bold;
+                font-size: 15px;
+                font-family: "Segoe UI", Arial, sans-serif;
+                margin-top: 2px;
+                padding: 2px;
             }
             
             #timerLabel {
+                color: white;
                 font-size: 20px;
-                font-family: "Courier New", monospace;
-            }
-            
-            /* 録音中モード */
-            #statusFrame[mode="recording"] {
-                background-color: rgba(220, 50, 50, 180);
-                border: 1px solid rgba(255, 100, 100, 70);
-            }
-            
-            /* 文字起こし中モード */
-            #statusFrame[mode="transcribing"] {
-                background-color: rgba(50, 100, 200, 180);
-                border: 1px solid rgba(100, 150, 255, 70);
-            }
-            
-            /* コピー完了モード */
-            #statusFrame[mode="copied"] {
-                background-color: rgba(50, 170, 50, 180);
-                border: 1px solid rgba(100, 220, 100, 70);
+                font-family: "Segoe UI", Arial, sans-serif;
+                font-weight: 500;
+                padding: 2px;
             }
         """)
         
@@ -365,25 +351,57 @@ class StatusIndicatorWindow(QWidget):
         
         if mode == self.MODE_RECORDING:
             self.status_label.setText("録音中")
-            self.setFixedSize(150, 90)  # 高さを増やして文字が切れないようにする
-            self.frame.setStyleSheet("background-color: rgba(231, 76, 60, 0.9); border-radius: 10px;")
-            self.status_label.setStyleSheet("color: white; font-weight: bold;")
-            self.timer_label.setStyleSheet("color: white;")
+            self.setFixedSize(150, 90)
+            self.timer_label.setText("00:00")
             self.timer_label.show()
+            
+            # 録音中のスタイル - 赤系のグラデーション
+            self.frame.setStyleSheet("""
+                #statusFrame {
+                    border-radius: 12px;
+                    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                             stop:0 rgba(220, 60, 60, 220), 
+                                             stop:1 rgba(180, 40, 40, 220));
+                    border: 1px solid rgba(255, 100, 100, 80);
+                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                }
+            """)
         
         elif mode == self.MODE_TRANSCRIBING:
             self.status_label.setText("文字起こし中")
             self.setFixedSize(150, 70)
-            self.frame.setStyleSheet("background-color: rgba(52, 152, 219, 0.9); border-radius: 10px;")
-            self.status_label.setStyleSheet("color: white; font-weight: bold;")
+            self.timer_label.setText("")
             self.timer_label.hide()
+            
+            # 文字起こし中のスタイル - 青系のグラデーション
+            self.frame.setStyleSheet("""
+                #statusFrame {
+                    border-radius: 12px;
+                    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                             stop:0 rgba(60, 120, 220, 220), 
+                                             stop:1 rgba(40, 80, 180, 220));
+                    border: 1px solid rgba(100, 150, 255, 80);
+                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                }
+            """)
         
         elif mode == self.MODE_COPIED:
             self.status_label.setText("コピー完了")
             self.setFixedSize(150, 70)
-            self.frame.setStyleSheet("background-color: rgba(46, 204, 113, 0.9); border-radius: 10px;")
-            self.status_label.setStyleSheet("color: white; font-weight: bold;")
+            self.timer_label.setText("")
             self.timer_label.hide()
+            
+            # コピー完了のスタイル - 緑系のグラデーション
+            self.frame.setStyleSheet("""
+                #statusFrame {
+                    border-radius: 12px;
+                    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                             stop:0 rgba(60, 180, 60, 220), 
+                                             stop:1 rgba(40, 150, 40, 220));
+                    border: 1px solid rgba(100, 220, 100, 80);
+                    box-shadow: 0px 3px 5px rgba(0, 0, 0, 40%);
+                }
+            """)
             
             # 3秒後に非表示
             self.auto_hide_timer.start(3000)
@@ -538,27 +556,149 @@ class MainWindow(QMainWindow):
             # アイコンファイルが見つからない場合は標準アイコンを使用
             self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
             print(f"警告: アイコンファイルが見つかりません: {icon_path}")
+            
+        # アプリ全体のスタイルを設定
+        self.setStyleSheet("""
+            * {
+                font-family: "Segoe UI", Arial, sans-serif;
+                font-size: 13px;
+            }
+            
+            QMainWindow {
+                background-color: #F5F5F7;
+            }
+            
+            QToolBar {
+                background-color: #F0F0F2;
+                border-bottom: 1px solid #DDDDDF;
+                spacing: 5px;
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            QToolBar QAction {
+                padding: 4px 8px;
+            }
+            
+            QPushButton {
+                background-color: #3B82F6;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            
+            QPushButton:hover {
+                background-color: #2563EB;
+            }
+            
+            QPushButton:pressed {
+                background-color: #1D4ED8;
+            }
+            
+            QTextEdit {
+                border: 1px solid #DDDDDF;
+                border-radius: 4px;
+                background-color: white;
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            QComboBox {
+                border: 1px solid #DDDDDF;
+                border-radius: 4px;
+                padding: 6px 12px;
+                background-color: white;
+                min-width: 150px;
+            }
+            
+            QComboBox:hover {
+                border-color: #BBBBBB;
+            }
+            
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: center right;
+                width: 20px;
+                border-left: none;
+            }
+            
+            QStatusBar {
+                background-color: #F0F0F2;
+                color: #555555;
+                border-top: 1px solid #DDDDDF;
+                font-size: 13px;
+            }
+            
+            QLabel {
+                color: #333333;
+                font-size: 13px;
+            }
+        """)
         
         # Create central widget and main layout
         central_widget = QWidget()
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(10)
         
         # Create toolbar
         self.create_toolbar()
         
         # Control panel
         control_panel = QWidget()
-        control_layout = QHBoxLayout()
+        control_panel.setObjectName("controlPanel")
+        control_panel.setStyleSheet("""
+            #controlPanel {
+                background-color: white;
+                border-radius: 8px;
+                border: 1px solid #DDDDDF;
+            }
+        """)
+        control_layout = QGridLayout()
+        control_layout.setContentsMargins(15, 15, 15, 15)
+        control_layout.setSpacing(12)
         
         # Recording controls
         self.record_button = QPushButton("録音開始")
+        self.record_button.setObjectName("recordButton")
+        self.record_button.setMinimumHeight(40)
+        self.record_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.record_button.setStyleSheet("""
+            #recordButton {
+                background-color: #3B82F6;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            
+            #recordButton:hover {
+                background-color: #2563EB;
+            }
+            
+            #recordButton:pressed {
+                background-color: #1D4ED8;
+            }
+        """)
         self.record_button.clicked.connect(self.toggle_recording)
         
+        # コントロールフォーム
+        control_form = QWidget()
+        form_layout = QFormLayout(control_form)
+        form_layout.setContentsMargins(0, 0, 0, 0)
+        form_layout.setHorizontalSpacing(10)
+        form_layout.setVerticalSpacing(10)
+        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        
         # Language selection
-        language_layout = QHBoxLayout()
-        language_layout.addWidget(QLabel("言語:"))
         self.language_combo = QComboBox()
-        language_layout.addWidget(self.language_combo)
+        self.language_combo.setObjectName("languageCombo")
         
         # Add language options
         self.language_combo.addItem("自動検出", "")
@@ -574,10 +714,8 @@ class MainWindow(QMainWindow):
         self.language_combo.addItem("ロシア語", "ru")
         
         # モデル選択
-        model_layout = QHBoxLayout()
-        model_layout.addWidget(QLabel("モデル:"))
         self.model_combo = QComboBox()
-        model_layout.addWidget(self.model_combo)
+        self.model_combo.setObjectName("modelCombo")
         
         # モデルリストを取得してコンボボックスに追加
         for model in WhisperTranscriber.get_available_models():
@@ -594,30 +732,97 @@ class MainWindow(QMainWindow):
         index = self.model_combo.findData(last_model)
         if index >= 0:
             self.model_combo.setCurrentIndex(index)
+            
+        # フォームにフィールドを追加
+        language_label = QLabel("言語:")
+        language_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
-        # Add controls to layout
-        control_layout.addWidget(self.record_button)
-        control_layout.addLayout(language_layout)
-        control_layout.addLayout(model_layout)
+        model_label = QLabel("モデル:")
+        model_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        
+        form_layout.addRow(language_label, self.language_combo)
+        form_layout.addRow(model_label, self.model_combo)
+        
+        # レイアウトに追加
+        control_layout.addWidget(self.record_button, 0, 0, 2, 1)
+        control_layout.addWidget(control_form, 0, 1, 2, 5)
+        control_layout.setColumnStretch(0, 1)  # 録音ボタンの列
+        control_layout.setColumnStretch(1, 3)  # フォームの列
         
         control_panel.setLayout(control_layout)
         main_layout.addWidget(control_panel)
+        
+        # Transcription panel
+        transcription_panel = QWidget()
+        transcription_panel.setObjectName("transcriptionPanel")
+        transcription_panel.setStyleSheet("""
+            #transcriptionPanel {
+                background-color: white;
+                border-radius: 8px;
+                border: 1px solid #DDDDDF;
+            }
+        """)
+        
+        transcription_layout = QVBoxLayout(transcription_panel)
+        transcription_layout.setContentsMargins(15, 15, 15, 15)
+        
+        # タイトルラベル
+        title_label = QLabel("文字起こし結果")
+        title_label.setObjectName("sectionTitle")
+        title_label.setStyleSheet("""
+            #sectionTitle {
+                font-weight: bold;
+                font-size: 15px;
+                color: #333333;
+                padding-bottom: 8px;
+            }
+        """)
+        transcription_layout.addWidget(title_label)
         
         # Transcription output
         self.transcription_text = QTextEdit()
         self.transcription_text.setPlaceholderText("ここに文字起こしが表示されます...")
         self.transcription_text.setReadOnly(False)  # Allow editing for corrections
+        self.transcription_text.setMinimumHeight(250)
+        self.transcription_text.setStyleSheet("""
+            QTextEdit {
+                border: 1px solid #E5E7EB;
+                border-radius: 4px;
+                background-color: #FAFAFA;
+                padding: 12px;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        """)
         
-        main_layout.addWidget(self.transcription_text)
+        transcription_layout.addWidget(self.transcription_text)
+        main_layout.addWidget(transcription_panel, 1)
         
         # Status bar
         self.status_bar = self.statusBar()
         self.status_bar.showMessage("準備完了")
+        self.status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: #F0F0F2;
+                color: #555555;
+                border-top: 1px solid #DDDDDF;
+                padding: 5px;
+            }
+            
+            QStatusBar QLabel {
+                padding: 0px 5px;
+            }
+        """)
         
         # Recording indicator
         self.recording_indicator = QLabel("●")
-        self.recording_indicator.setStyleSheet("color: gray;")
+        self.recording_indicator.setObjectName("recordingIndicator")
+        self.recording_indicator.setStyleSheet("color: gray; font-size: 16px;")
+        
         self.recording_timer_label = QLabel("00:00")
+        self.recording_timer_label.setObjectName("recordingTimerLabel")
+        self.recording_timer_label.setStyleSheet("color: #444; font-family: 'Roboto Mono', monospace; font-weight: bold;")
+        
         self.status_bar.addPermanentWidget(self.recording_indicator)
         self.status_bar.addPermanentWidget(self.recording_timer_label)
         
@@ -798,9 +1003,62 @@ class MainWindow(QMainWindow):
     def update_recording_status(self, is_recording):
         """Update the recording indicator"""
         if is_recording:
-            self.recording_indicator.setStyleSheet("color: red;")
+            self.recording_indicator.setStyleSheet("""
+                color: #E53E3E;
+                font-size: 18px;
+                font-weight: bold;
+                animation: pulse 1.5s infinite;
+                
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                    100% { opacity: 1; }
+                }
+            """)
+            
+            # 録音ボタンのスタイルも変更
+            self.record_button.setStyleSheet("""
+                #recordButton {
+                    background-color: #E53E3E;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 20px;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                
+                #recordButton:hover {
+                    background-color: #C53030;
+                }
+                
+                #recordButton:pressed {
+                    background-color: #9B2C2C;
+                }
+            """)
         else:
-            self.recording_indicator.setStyleSheet("color: gray;")
+            self.recording_indicator.setStyleSheet("color: gray; font-size: 16px;")
+            
+            # 録音ボタンのスタイルを元に戻す
+            self.record_button.setStyleSheet("""
+                #recordButton {
+                    background-color: #3B82F6;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 20px;
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                
+                #recordButton:hover {
+                    background-color: #2563EB;
+                }
+                
+                #recordButton:pressed {
+                    background-color: #1D4ED8;
+                }
+            """)
     
     def update_recording_time(self):
         """Update the recording time display"""
