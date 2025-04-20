@@ -1054,7 +1054,8 @@ class MainWindow(QMainWindow):
         およびウィジェットの配置を設定します。
         """
         self.setWindowTitle("Open Super Whisper")
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1000, 600)
+        self.setFixedSize(1000, 600)  # ウィンドウサイズを固定
         
         # アプリケーションアイコンを設定
         icon_path = getResourcePath("assets/icon.ico")
@@ -1846,20 +1847,42 @@ class MainWindow(QMainWindow):
         エラーが発生しても、アプリケーションは引き続き動作します。
         """
         try:
-            # まず以前のホットキーの登録を試みる（エラーが出ても続行）
+            # まず以前のホットキーの登録を解除
             try:
                 keyboard.unhook_all_hotkeys()
-            except:
-                pass
+                print("既存のホットキーをすべて解除しました")
+            except Exception as e:
+                print(f"既存ホットキー解除中にエラーが発生しました: {e}")
             
-            # 新しいホットキーを登録
-            keyboard.add_hotkey(self.hotkey, self.toggle_recording)
+            # クリーンな状態でホットキーを再登録
+            keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
             print(f"ホットキー '{self.hotkey}' を設定しました")
+            
+            # 定期的にホットキー登録状態を確認するタイマーを設定
+            self.hotkey_check_timer = QTimer(self)
+            self.hotkey_check_timer.timeout.connect(self.check_hotkey_status)
+            self.hotkey_check_timer.start(60000)  # 1分ごとにチェック
+            
             return True
         except Exception as e:
             print(f"ホットキーの設定エラー: {e}")
+            # エラーメッセージをユーザーに表示
+            self.status_bar.showMessage(f"ホットキー設定エラー: {e}", 5000)
             # エラーがあってもアプリは正常に動作するようにする
             return False
+    
+    def check_hotkey_status(self):
+        """
+        ホットキーの状態を定期的にチェックし、必要に応じて再登録を試みる
+        """
+        try:
+            # ホットキーが機能しているか確認できないため、
+            # 安全のため定期的に再登録する
+            keyboard.unhook_all_hotkeys()
+            keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
+            print("ホットキーを再登録しました")
+        except Exception as e:
+            print(f"ホットキー再登録中にエラー: {e}")
     
     def setup_system_tray(self):
         """
