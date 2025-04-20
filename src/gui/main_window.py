@@ -1881,7 +1881,7 @@ class MainWindow(QMainWindow):
         
         self.tray_icon.setToolTip("Open Super Whisper")
         
-        # Create tray menu with style
+        # トレイメニューをスタイル付きで作成
         menu = QMenu()
         menu.setStyleSheet("""
             QMenu {
@@ -1912,23 +1912,23 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        # Add show/hide action
+        # 表示/非表示アクションを追加
         show_action = QAction("表示", self)
         show_action.triggered.connect(self.show)
         menu.addAction(show_action)
         
-        # Add separator
+        # セパレーターを追加
         menu.addSeparator()
         
-        # Add record action
+        # 録音アクションを追加
         record_action = QAction("録音開始/停止", self)
         record_action.triggered.connect(self.toggle_recording)
         menu.addAction(record_action)
         
-        # Add separator
+        # セパレーターを追加
         menu.addSeparator()
         
-        # Add exit action
+        # 終了アクションを追加
         exit_action = QAction("終了", self)
         exit_action.triggered.connect(self.quit_application)
         menu.addAction(exit_action)
