@@ -44,6 +44,9 @@ class WhisperTranscriber:
         
         # Cache for custom vocabulary (prompt)
         self.custom_vocabulary = []
+        
+        # システム指示用のリスト
+        self.system_instructions = []
     
     @classmethod
     def get_available_models(cls):
@@ -68,13 +71,36 @@ class WhisperTranscriber:
         """Get the current custom vocabulary list"""
         return self.custom_vocabulary
     
+    def add_system_instruction(self, instructions):
+        """システムプロンプトに指示を追加"""
+        if isinstance(instructions, str):
+            instructions = [instructions]
+        self.system_instructions.extend(instructions)
+    
+    def clear_system_instructions(self):
+        """システムプロンプトをクリア"""
+        self.system_instructions = []
+    
+    def get_system_instructions(self):
+        """現在のシステムプロンプトを取得"""
+        return self.system_instructions
+    
     def _build_prompt(self):
-        """Build a prompt with custom vocabulary for the transcription"""
-        if not self.custom_vocabulary:
+        """語彙とシステム指示を含むプロンプトを構築"""
+        prompt_parts = []
+        
+        # カスタム語彙を追加
+        if self.custom_vocabulary:
+            prompt_parts.append("Vocabulary: " + ", ".join(self.custom_vocabulary))
+        
+        # システム指示を追加
+        if self.system_instructions:
+            prompt_parts.append("Instructions: " + ". ".join(self.system_instructions))
+        
+        if not prompt_parts:
             return None
             
-        prompt = "Vocabulary: " + ", ".join(self.custom_vocabulary)
-        return prompt
+        return " ".join(prompt_parts)
         
     def transcribe(self, audio_file, language=None, response_format="text"):
         """

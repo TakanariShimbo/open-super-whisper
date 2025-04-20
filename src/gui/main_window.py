@@ -171,6 +171,93 @@ class VocabularyDialog(QDialog):
         return [self.vocabulary_list.item(i).text() for i in range(self.vocabulary_list.count())]
 
 
+class SystemInstructionsDialog(QDialog):
+    """システム指示を管理するダイアログ"""
+    
+    def __init__(self, parent=None, instructions=None):
+        super().__init__(parent)
+        self.setWindowTitle("システム指示")
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(400)
+        
+        layout = QVBoxLayout()
+        
+        # 説明ラベル
+        info_label = QLabel(
+            "ここで文字起こしのための特別な指示を設定できます。例：\n"
+            "- \"えー、あの、などのフィラーを無視してください\"\n"
+            "- \"句読点を適切に入れてください\"\n"
+            "- \"段落に分けてください\""
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
+        # 指示リスト
+        self.instructions_list = QListWidget()
+        if instructions:
+            for instruction in instructions:
+                self.instructions_list.addItem(instruction)
+        
+        layout.addWidget(QLabel("システム指示:"))
+        layout.addWidget(self.instructions_list)
+        
+        # 指示追加インターフェース
+        add_layout = QHBoxLayout()
+        self.instruction_input = QLineEdit()
+        self.instruction_input.setPlaceholderText("新しい指示を入力...")
+        self.add_button = QPushButton("追加")
+        self.add_button.clicked.connect(self.add_instruction)
+        
+        add_layout.addWidget(self.instruction_input)
+        add_layout.addWidget(self.add_button)
+        layout.addLayout(add_layout)
+        
+        # アクションボタン
+        button_layout = QHBoxLayout()
+        self.remove_button = QPushButton("選択項目を削除")
+        self.remove_button.clicked.connect(self.remove_instruction)
+        self.clear_button = QPushButton("すべて削除")
+        self.clear_button.clicked.connect(self.clear_instructions)
+        
+        button_layout.addWidget(self.remove_button)
+        button_layout.addWidget(self.clear_button)
+        layout.addLayout(button_layout)
+        
+        # ダイアログボタン
+        dialog_buttons = QHBoxLayout()
+        self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("キャンセル")
+        self.cancel_button.clicked.connect(self.reject)
+        
+        dialog_buttons.addWidget(self.cancel_button)
+        dialog_buttons.addWidget(self.ok_button)
+        layout.addLayout(dialog_buttons)
+        
+        self.setLayout(layout)
+    
+    def add_instruction(self):
+        """新しい指示を追加"""
+        instruction = self.instruction_input.text().strip()
+        if instruction:
+            self.instructions_list.addItem(instruction)
+            self.instruction_input.clear()
+    
+    def remove_instruction(self):
+        """選択された指示を削除"""
+        selected_items = self.instructions_list.selectedItems()
+        for item in selected_items:
+            self.instructions_list.takeItem(self.instructions_list.row(item))
+    
+    def clear_instructions(self):
+        """全ての指示を削除"""
+        self.instructions_list.clear()
+    
+    def get_instructions(self):
+        """指示リストを返す"""
+        return [self.instructions_list.item(i).text() for i in range(self.instructions_list.count())]
+
+
 class HotkeyDialog(QDialog):
     """Dialog to set global hotkey"""
     
@@ -390,6 +477,11 @@ class MainWindow(QMainWindow):
         vocabulary_action.triggered.connect(self.show_vocabulary_dialog)
         toolbar.addAction(vocabulary_action)
         
+        # システム指示アクション
+        system_instructions_action = QAction("システム指示", self)
+        system_instructions_action.triggered.connect(self.show_system_instructions_dialog)
+        toolbar.addAction(system_instructions_action)
+        
         # Copy to clipboard action
         copy_action = QAction("クリップボードにコピー", self)
         copy_action.triggered.connect(self.copy_to_clipboard)
@@ -455,6 +547,21 @@ class MainWindow(QMainWindow):
             self.whisper_transcriber.clear_custom_vocabulary()
             self.whisper_transcriber.add_custom_vocabulary(new_vocabulary)
             self.status_bar.showMessage(f"{len(new_vocabulary)}個の語彙を追加しました", 3000)
+    
+    def show_system_instructions_dialog(self):
+        """システム指示を管理するダイアログを表示"""
+        if not self.whisper_transcriber:
+            QMessageBox.warning(self, "エラー", "先にAPIキーを設定してください")
+            return
+            
+        instructions = self.whisper_transcriber.get_system_instructions()
+        dialog = SystemInstructionsDialog(self, instructions)
+        
+        if dialog.exec():
+            new_instructions = dialog.get_instructions()
+            self.whisper_transcriber.clear_system_instructions()
+            self.whisper_transcriber.add_system_instruction(new_instructions)
+            self.status_bar.showMessage(f"{len(new_instructions)}個のシステム指示を設定しました", 3000)
     
     def toggle_recording(self):
         """Start or stop recording"""
