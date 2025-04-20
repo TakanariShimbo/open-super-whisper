@@ -7,6 +7,7 @@ A Python-based desktop application for speech transcription using OpenAI's Whisp
 - 🎙️ Record audio directly from your microphone
 - 🌎 Support for 100+ languages with automatic language detection
 - 📝 Custom vocabulary support to improve transcription accuracy
+- 🔧 System instructions for controlling transcription behavior
 - 📋 Copy transcription to clipboard
 - 🔄 Real-time recording status and timer
 
@@ -147,6 +148,15 @@ Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` fol
 1. Click "Custom Vocabulary" in the toolbar
 2. Add specific terms, names, or phrases that might appear in your audio
 3. These terms will help improve transcription accuracy
+
+### System Instructions
+
+1. Click "System Instructions" in the toolbar
+2. Add specific instructions to control transcription behavior, such as:
+   - "Ignore filler words like um, uh, er"
+   - "Add proper punctuation"
+   - "Format text into paragraphs"
+3. These instructions help refine transcription results without manual editing
 
 ### Managing Transcriptions
 
