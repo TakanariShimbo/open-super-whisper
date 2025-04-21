@@ -36,10 +36,6 @@ uv --version
 2. If not installed, you can install it with:
 
 ```bash
-# Using pip
-pip install uv
-
-# Or using the official method
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
