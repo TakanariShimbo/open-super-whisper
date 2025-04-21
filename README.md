@@ -23,7 +23,10 @@ That's it! No need to switch applications during your workflow.
 
 ## Demo
 
-![Demo of Open Super Whisper in action](demo/demo.gif)
+<video width="720" controls>
+  <source src="demo/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ## Requirements
 
