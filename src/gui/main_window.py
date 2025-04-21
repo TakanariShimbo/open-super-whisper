@@ -22,9 +22,7 @@ import keyboard
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
-
-# ホットキー設定のデフォルト値
-DEFAULT_HOTKEY = "ctrl+shift+r"
+from src.core.config import AppConfig
 
 def getResourcePath(relative_path):
     """
@@ -996,18 +994,18 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         # 設定の読み込み
-        self.settings = QSettings("OpenSuperWhisper", "OpenSuperWhisper")
-        self.api_key = self.settings.value("api_key", "")
+        self.settings = QSettings(AppConfig.APP_ORGANIZATION, AppConfig.APP_NAME)
+        self.api_key = self.settings.value("api_key", AppConfig.DEFAULT_API_KEY)
         
         # ホットキーとクリップボード設定
-        self.hotkey = self.settings.value("hotkey", DEFAULT_HOTKEY)
-        self.auto_copy = self.settings.value("auto_copy", True, type=bool)
+        self.hotkey = self.settings.value("hotkey", AppConfig.DEFAULT_HOTKEY)
+        self.auto_copy = self.settings.value("auto_copy", AppConfig.DEFAULT_AUTO_COPY, type=bool)
         
         # サウンド設定
-        self.enable_sound = self.settings.value("enable_sound", True, type=bool)
+        self.enable_sound = self.settings.value("enable_sound", AppConfig.DEFAULT_ENABLE_SOUND, type=bool)
         
         # インジケータ表示設定（デフォルトON）
-        self.show_indicator = self.settings.value("show_indicator", True, type=bool)
+        self.show_indicator = self.settings.value("show_indicator", AppConfig.DEFAULT_SHOW_INDICATOR, type=bool)
         
         # サウンドプレーヤーの初期化
         self.setup_sound_players()
@@ -1313,7 +1311,7 @@ class MainWindow(QMainWindow):
             )
         
         # 前回選択したモデルを設定
-        last_model = self.settings.value("model", "whisper-1")
+        last_model = self.settings.value("model", AppConfig.DEFAULT_MODEL)
         index = self.model_combo.findData(last_model)
         if index >= 0:
             self.model_combo.setCurrentIndex(index)
@@ -2083,7 +2081,7 @@ class MainWindow(QMainWindow):
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
-        sound_path = getResourcePath("assets/start_sound.wav")
+        sound_path = getResourcePath(AppConfig.START_SOUND_PATH)
         self.start_player.setSource(QUrl.fromLocalFile(sound_path))
         self.start_audio_output.setVolume(0.5)
         self.start_player.play()
@@ -2097,7 +2095,7 @@ class MainWindow(QMainWindow):
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
-        sound_path = getResourcePath("assets/stop_sound.wav")
+        sound_path = getResourcePath(AppConfig.STOP_SOUND_PATH)
         self.stop_player.setSource(QUrl.fromLocalFile(sound_path))
         self.stop_audio_output.setVolume(0.5)
         self.stop_player.play()
@@ -2111,7 +2109,7 @@ class MainWindow(QMainWindow):
         if not self.enable_sound:
             return
         # assets内の音声ファイルを使用
-        sound_path = getResourcePath("assets/complete_sound.wav")
+        sound_path = getResourcePath(AppConfig.COMPLETE_SOUND_PATH)
         self.complete_player.setSource(QUrl.fromLocalFile(sound_path))
         self.complete_audio_output.setVolume(0.5)
         self.complete_player.play()
@@ -2185,7 +2183,7 @@ def main():
     
     # 初回起動時はホットキーについての通知を表示
     if not window.settings.contains("first_run_done"):
-        hotkey = window.settings.value("hotkey", DEFAULT_HOTKEY)
+        hotkey = window.settings.value("hotkey", AppConfig.DEFAULT_HOTKEY)
         QMessageBox.information(
             window, 
             "ホットキー情報", 
