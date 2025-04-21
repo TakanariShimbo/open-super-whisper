@@ -25,6 +25,10 @@ That's it! No need to switch applications during your workflow.
 
 ![Demo of Open Super Whisper in action](demo/demo.gif)
 
+## Download
+
+You can download the latest executable file (.exe) for Windows from our [GitHub Releases page](https://github.com/TakanariShimbo/open-super-whisper/releases).
+
 ## Requirements
 
 - OpenAI API key

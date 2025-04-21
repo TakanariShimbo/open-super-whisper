@@ -25,6 +25,10 @@
 
 ![Open Super Whisperの動作デモ](demo/demo.gif)
 
+## ダウンロード
+
+Windows用の最新の実行可能ファイル（.exe）は、[GitHub Releasesページ](https://github.com/TakanariShimbo/open-super-whisper/releases)からダウンロードできます。
+
 ## 必要条件
 
 - OpenAI APIキー
