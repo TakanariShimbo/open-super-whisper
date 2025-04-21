@@ -3,10 +3,6 @@ import json
 import tempfile
 from pathlib import Path
 import openai
-from dotenv import load_dotenv
-
-# .envファイルが利用可能な場合、環境変数を読み込む
-load_dotenv()
 
 
 class WhisperTranscriber:
@@ -19,9 +15,9 @@ class WhisperTranscriber:
     
     # 利用可能なモデルのリスト
     AVAILABLE_MODELS = [
-        {"id": "whisper-1", "name": "Whisper", "description": "OpenAIのオープンソースWhisperモデル"},
-        {"id": "gpt-4o-transcribe", "name": "GPT-4o Transcribe", "description": "高性能な文字起こしモデル"},
-        {"id": "gpt-4o-mini-transcribe", "name": "GPT-4o Mini Transcribe", "description": "軽量で高速な文字起こしモデル"}
+        {"id": "whisper-1", "name": "Whisper", "description": "OpenAI's open-source Whisper model"},
+        {"id": "gpt-4o-transcribe", "name": "GPT-4o Transcribe", "description": "High-performance transcription model"},
+        {"id": "gpt-4o-mini-transcribe", "name": "GPT-4o Mini Transcribe", "description": "Lightweight and fast transcription model"}
     ]
     
     def __init__(self, api_key=None):
@@ -37,7 +33,7 @@ class WhisperTranscriber:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         
         if not self.api_key:
-            raise ValueError("OpenAI APIキーが必要です。直接提供するか、OPENAI_API_KEY環境変数を設定してください。")
+            raise ValueError("OpenAI API key is required. Please provide it directly or set the OPENAI_API_KEY environment variable.")
         
         # OpenAIクライアントの初期化
         self.client = openai.OpenAI(api_key=self.api_key)
@@ -215,4 +211,4 @@ class WhisperTranscriber:
                 
         except Exception as e:
             print(f"Error occurred during transcription: {e}")
-            return f"エラー: {str(e)}"
+            return f"Error: {str(e)}"
