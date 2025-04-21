@@ -996,7 +996,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         # 設定の読み込み
-        self.settings = QSettings("OpenSuperWhisper", "WhisperTranscriber")
+        self.settings = QSettings("OpenSuperWhisper", "OpenSuperWhisper")
         self.api_key = self.settings.value("api_key", "")
         
         # ホットキーとクリップボード設定
@@ -2184,9 +2184,8 @@ def main():
     window = MainWindow()
     
     # 初回起動時はホットキーについての通知を表示
-    settings = QSettings("OpenSuperWhisper", "WhisperTranscriber")
-    if not settings.contains("first_run_done"):
-        hotkey = settings.value("hotkey", DEFAULT_HOTKEY)
+    if not window.settings.contains("first_run_done"):
+        hotkey = window.settings.value("hotkey", DEFAULT_HOTKEY)
         QMessageBox.information(
             window, 
             "ホットキー情報", 
@@ -2194,7 +2193,7 @@ def main():
             f"グローバルホットキー: {hotkey} で録音を開始/停止できます。\n"
             f"この設定はツールバーの「ホットキー設定」から変更できます。"
         )
-        settings.setValue("first_run_done", True)
+        window.settings.setValue("first_run_done", True)
     
     # ウィンドウを表示（デフォルトではトレイに最小化して起動）
     if '--minimized' in sys.argv or '-m' in sys.argv:
