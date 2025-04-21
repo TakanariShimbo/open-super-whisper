@@ -1,6 +1,16 @@
 # Open Super Whisper
 
-A Python-based desktop application for speech transcription using OpenAI's Whisper model that seamlessly integrates with your workflow. With global hotkeys for recording control and automatic clipboard integration, you can instantly transcribe speech to text in any application you're using - making it the perfect companion for note-taking, content creation, or accessibility needs.
+<img src="assets/icon.png" alt="Open Super Whisper Icon" width="128" height="128" align="right"/>
+
+Simple desktop application for speech transcription with global hotkey control. Record, transcribe, and paste - all without switching applications.
+
+## Quick Start - Just 3 Steps!
+
+1. **Start Recording** - Press the global hotkey (default: Ctrl+Shift+R) from any application
+2. **Stop Recording** - Press the same hotkey again when you're done speaking
+3. **Paste Text** - The transcription is automatically copied to your clipboard, just paste it wherever you need
+
+That's it! No need to switch applications during your workflow.
 
 ## Features
 
