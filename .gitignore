@@ -12,11 +12,6 @@ build/
 *.egg-info/
 
 # Temp files
-*.wav
-*.mp3
-*.flac
-*.ogg
-*.m4a
 temp/
 
 # User-specific settings
