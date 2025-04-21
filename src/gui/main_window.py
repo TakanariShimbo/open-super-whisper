@@ -22,7 +22,7 @@ import keyboard
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
-from src.core.config import AppConfig
+from src.gui.config import AppConfig
 
 def getResourcePath(relative_path):
     """
