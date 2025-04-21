@@ -104,8 +104,8 @@ class MainWindow(QMainWindow):
         およびウィジェットの配置を設定します。
         """
         self.setWindowTitle(AppLabels.APP_TITLE)
-        self.setMinimumSize(1000, 600)
-        self.setFixedSize(1000, 600)  # ウィンドウサイズを固定
+        self.setMinimumSize(1200, 600)
+        self.setFixedSize(1200, 600)  # ウィンドウサイズを固定
         
         # アプリケーションアイコンを設定
         icon_path = getResourcePath("assets/icon.ico")
