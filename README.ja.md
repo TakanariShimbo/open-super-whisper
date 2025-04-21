@@ -23,10 +23,7 @@
 
 ## デモ
 
-<video width="720" controls>
-  <source src="demo/demo.mp4" type="video/mp4">
-  ご使用のブラウザではビデオタグをサポートしていません。
-</video>
+![Open Super Whisperの動作デモ](demo/demo.gif)
 
 ## 必要条件
 
