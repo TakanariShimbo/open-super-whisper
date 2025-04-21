@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl, QObject
 from PyQt6.QtGui import QIcon, QAction, QFont
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
-import keyboard
+from pynput import keyboard
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
@@ -55,6 +55,9 @@ class MainWindow(QMainWindow):
         
         # インジケータ表示設定（デフォルトON）
         self.show_indicator = self.settings.value("show_indicator", AppConfig.DEFAULT_SHOW_INDICATOR, type=bool)
+        
+        # pynput用のキーボードリスナー
+        self.keyboard_listener = None
         
         # サウンドプレーヤーの初期化
         self.setup_sound_players()
@@ -623,21 +626,24 @@ class MainWindow(QMainWindow):
         エラーが発生しても、アプリケーションは引き続き動作します。
         """
         try:
-            # まず以前のホットキーの登録を解除
-            try:
-                keyboard.unhook_all_hotkeys()
-                print("All existing hotkeys have been unregistered")
-            except Exception as e:
-                print(f"Error occurred while unregistering existing hotkeys: {e}")
+            # 以前のリスナーがあれば停止
+            if self.keyboard_listener:
+                self.keyboard_listener.stop()
+                print("Previous keyboard listener has been stopped")
             
-            # クリーンな状態でホットキーを再登録
-            keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
+            # ホットキーの組み合わせを解析
+            hotkey_combination = self._parse_hotkey_string(self.hotkey)
+            if not hotkey_combination:
+                raise ValueError(f"Invalid hotkey format: {self.hotkey}")
+            
+            # キーボードリスナーを設定
+            self.keyboard_listener = keyboard.GlobalHotKeys({
+                hotkey_combination: self.toggle_recording
+            })
+            
+            # リスナーを開始（非ブロッキングモードで）
+            self.keyboard_listener.start()
             print(f"Hotkey '{self.hotkey}' has been set")
-            
-            # 定期的にホットキー登録状態を確認するタイマーを設定
-            self.hotkey_check_timer = QTimer(self)
-            self.hotkey_check_timer.timeout.connect(self.check_hotkey_status)
-            self.hotkey_check_timer.start(60000)  # 1分ごとにチェック
             
             return True
         except Exception as e:
@@ -647,18 +653,49 @@ class MainWindow(QMainWindow):
             # エラーがあってもアプリは正常に動作するようにする
             return False
     
-    def check_hotkey_status(self):
+    def _parse_hotkey_string(self, hotkey_str):
         """
-        ホットキーの状態を定期的にチェックし、必要に応じて再登録を試みる
+        ホットキー文字列をpynput形式に変換
+        
+        Parameters
+        ----------
+        hotkey_str : str
+            'ctrl+shift+r'のような形式のホットキー文字列
+            
+        Returns
+        -------
+        str
+            pynput形式のホットキー文字列（例: '<ctrl>+<shift>+r'）
         """
-        try:
-            # ホットキーが機能しているか確認できないため、
-            # 安全のため定期的に再登録する
-            keyboard.unhook_all_hotkeys()
-            keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
-            print("Hotkey has been re-registered")
-        except Exception as e:
-            print(f"Error during hotkey re-registration: {e}")
+        if not hotkey_str:
+            return None
+            
+        # 大文字小文字を正規化
+        hotkey_str = hotkey_str.lower()
+        
+        # キーマッピング
+        key_mapping = {
+            'ctrl': '<ctrl>',
+            'control': '<ctrl>',
+            'alt': '<alt>',
+            'shift': '<shift>',
+            'cmd': '<cmd>',
+            'command': '<cmd>',
+            'win': '<cmd>',
+            'windows': '<cmd>'
+        }
+        
+        parts = hotkey_str.split('+')
+        processed_parts = []
+        
+        for part in parts:
+            part = part.strip()
+            if part in key_mapping:
+                processed_parts.append(key_mapping[part])
+            else:
+                processed_parts.append(part)
+        
+        return '+'.join(processed_parts)
     
     def setup_system_tray(self):
         """
@@ -761,11 +798,9 @@ class MainWindow(QMainWindow):
         ホットキーの設定を変更するためのダイアログを表示します。
         ダイアログ表示中は現在のホットキーを一時的に解除します。
         """
-        # 現在のホットキーを一時的に解除
-        try:
-            keyboard.unhook_all_hotkeys()
-        except:
-            pass
+        # 現在のリスナーを一時的に停止
+        if self.keyboard_listener:
+            self.keyboard_listener.stop()
         
         dialog = HotkeyDialog(self, self.hotkey)
         if dialog.exec():
@@ -775,6 +810,9 @@ class MainWindow(QMainWindow):
                 self.settings.setValue("hotkey", self.hotkey)
                 self.setup_global_hotkey()
                 self.status_bar.showMessage(AppLabels.STATUS_HOTKEY_SET.format(self.hotkey), 3000)
+        else:
+            # ダイアログがキャンセルされた場合は元のホットキーを再設定
+            self.setup_global_hotkey()
     
     def toggle_auto_copy(self):
         """
@@ -796,6 +834,10 @@ class MainWindow(QMainWindow):
         
         トレイアイコンを非表示にし、設定を保存してからアプリケーションを終了します。
         """
+        # キーボードリスナーを停止
+        if self.keyboard_listener:
+            self.keyboard_listener.stop()
+            
         # トレイアイコンを非表示にする
         if hasattr(self, 'tray_icon'):
             self.tray_icon.hide()
