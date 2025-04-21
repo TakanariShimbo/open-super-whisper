@@ -107,4 +107,16 @@ class AppLabels:
     INFO_TITLE = "情報"
     INFO_TRAY_MINIMIZED = "アプリケーションはシステムトレイで実行されています。\n" \
                         "完全に終了するには、トレイアイコンから「終了」を選択するか、\n" \
-                        "ツールバーの「アプリケーション終了」をクリックしてください。" 
+                        "ツールバーの「アプリケーション終了」をクリックしてください。"
+    
+    # 言語名
+    LANGUAGE_ENGLISH = "英語"
+    LANGUAGE_SPANISH = "スペイン語"
+    LANGUAGE_FRENCH = "フランス語"
+    LANGUAGE_GERMAN = "ドイツ語"
+    LANGUAGE_ITALIAN = "イタリア語"
+    LANGUAGE_PORTUGUESE = "ポルトガル語"
+    LANGUAGE_JAPANESE = "日本語"
+    LANGUAGE_KOREAN = "韓国語"
+    LANGUAGE_CHINESE = "中国語"
+    LANGUAGE_RUSSIAN = "ロシア語" 
