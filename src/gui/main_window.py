@@ -54,7 +54,7 @@ def getResourcePath(relative_path):
         
         return os.path.join(base_path, relative_path)
     except Exception as e:
-        print(f"リソースパス解決エラー: {e}")
+        print(f"Resource path resolution error: {e}")
         return relative_path
 
 class APIKeyDialog(QDialog):
@@ -1063,7 +1063,7 @@ class MainWindow(QMainWindow):
         else:
             # アイコンファイルが見つからない場合は標準アイコンを使用
             self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
-            print(f"警告: アイコンファイルが見つかりません: {icon_path}")
+            print(f"Warning: Icon file not found: {icon_path}")
             
         # アプリ全体のスタイルを設定
         self.setStyleSheet("""
@@ -1848,13 +1848,13 @@ class MainWindow(QMainWindow):
             # まず以前のホットキーの登録を解除
             try:
                 keyboard.unhook_all_hotkeys()
-                print("既存のホットキーをすべて解除しました")
+                print("All existing hotkeys have been unregistered")
             except Exception as e:
-                print(f"既存ホットキー解除中にエラーが発生しました: {e}")
+                print(f"Error occurred while unregistering existing hotkeys: {e}")
             
             # クリーンな状態でホットキーを再登録
             keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
-            print(f"ホットキー '{self.hotkey}' を設定しました")
+            print(f"Hotkey '{self.hotkey}' has been set")
             
             # 定期的にホットキー登録状態を確認するタイマーを設定
             self.hotkey_check_timer = QTimer(self)
@@ -1863,7 +1863,7 @@ class MainWindow(QMainWindow):
             
             return True
         except Exception as e:
-            print(f"ホットキーの設定エラー: {e}")
+            print(f"Hotkey setup error: {e}")
             # エラーメッセージをユーザーに表示
             self.status_bar.showMessage(f"ホットキー設定エラー: {e}", 5000)
             # エラーがあってもアプリは正常に動作するようにする
@@ -1878,9 +1878,9 @@ class MainWindow(QMainWindow):
             # 安全のため定期的に再登録する
             keyboard.unhook_all_hotkeys()
             keyboard.add_hotkey(self.hotkey, self.toggle_recording, suppress=False)
-            print("ホットキーを再登録しました")
+            print("Hotkey has been re-registered")
         except Exception as e:
-            print(f"ホットキー再登録中にエラー: {e}")
+            print(f"Error during hotkey re-registration: {e}")
     
     def setup_system_tray(self):
         """
@@ -1898,7 +1898,7 @@ class MainWindow(QMainWindow):
         else:
             # アイコンファイルが見つからない場合は標準アイコンを使用
             self.tray_icon = QSystemTrayIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay), self)
-            print(f"警告: システムトレイ用アイコンファイルが見つかりません: {icon_path}")
+            print(f"Warning: System tray icon file not found: {icon_path}")
         
         self.tray_icon.setToolTip("Open Super Whisper")
         
@@ -2165,7 +2165,7 @@ def main():
         # アイコンファイルが見つからない場合は標準アイコンを使用
         app_icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
         app.setWindowIcon(app_icon)
-        print(f"警告: アプリケーション用アイコンファイルが見つかりません: {icon_path}")
+        print(f"Warning: Application icon file not found: {icon_path}")
     
     # PyQt6ではハイDPIスケーリングはデフォルトで有効
     # 古い属性設定は不要

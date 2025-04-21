@@ -99,7 +99,7 @@ class AudioRecorder:
                     sd.sleep(100)  # CPUの過剰消費を避けるためのスリープ
                     
         except Exception as e:
-            print(f"録音エラー: {e}")
+            print(f"Recording error: {e}")
             self.recording = False
 
     def is_recording(self):

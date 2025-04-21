@@ -214,5 +214,5 @@ class WhisperTranscriber:
                 return str(response)
                 
         except Exception as e:
-            print(f"文字起こし中にエラーが発生しました: {e}")
+            print(f"Error occurred during transcription: {e}")
             return f"エラー: {str(e)}"
