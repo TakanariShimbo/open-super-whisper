@@ -4,13 +4,16 @@
 録音中、文字起こし中、コピー完了などの状態を視覚的にユーザーに伝えるためのフローティングウィンドウを提供します
 """
 
+import os
+import sys
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QApplication
 )
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QColor, QPalette
 
-from src.gui.labels import AppLabels
-from src.gui.styles import AppStyles
+from src.gui.resources.labels import AppLabels
+from src.gui.resources.styles import AppStyles
 
 class StatusIndicatorWindow(QWidget):
     """

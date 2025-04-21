@@ -6,11 +6,12 @@
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QLineEdit, QListWidget
+    QPushButton, QLineEdit, QListWidget, QTextEdit, QMessageBox
 )
+from PyQt6.QtCore import Qt
 
-from src.gui.labels import AppLabels
-from src.gui.styles import AppStyles
+from src.gui.resources.labels import AppLabels
+from src.gui.resources.styles import AppStyles
 
 class SystemInstructionsDialog(QDialog):
     """

@@ -6,11 +6,12 @@
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QPushButton, QLineEdit, QLabel
+    QPushButton, QLineEdit, QLabel, QMessageBox
 )
+from PyQt6.QtCore import Qt
 
-from src.gui.labels import AppLabels
-from src.gui.styles import AppStyles
+from src.gui.resources.labels import AppLabels
+from src.gui.resources.styles import AppStyles
 
 class HotkeyDialog(QDialog):
     """

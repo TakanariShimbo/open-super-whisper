@@ -5,7 +5,8 @@ Open Super Whisper - GUIモジュール
 """
 
 # GUIコンポーネントをインポートしやすくする
-from src.gui.main_window import MainWindow
-from src.gui.config import AppConfig
-from src.gui.labels import AppLabels
-from src.gui.styles import AppStyles
+from src.gui.windows.main_window import MainWindow
+from src.gui.resources.config import AppConfig
+from src.gui.resources.labels import AppLabels
+from src.gui.resources.styles import AppStyles
+from src.gui.main import main

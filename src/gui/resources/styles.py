@@ -313,8 +313,8 @@ class AppStyles:
         #statusFrame {
             border-radius: 12px;
             background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                    stop:0 rgba(91, 127, 222, 220), 
-                                    stop:1 rgba(73, 104, 194, 220));
+                                    stop:0 rgba(120, 120, 120, 220), 
+                                    stop:1 rgba(90, 90, 90, 220));
             border: 1px solid rgba(255, 255, 255, 60);
         }
     """
@@ -324,8 +324,8 @@ class AppStyles:
         #statusFrame {
             border-radius: 12px;
             background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                    stop:0 rgba(65, 168, 95, 220), 
-                                    stop:1 rgba(55, 145, 80, 220));
+                                    stop:0 rgba(65, 105, 225, 220), 
+                                    stop:1 rgba(45, 85, 205, 220));
             border: 1px solid rgba(255, 255, 255, 60);
         }
     """

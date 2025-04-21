@@ -6,9 +6,10 @@ from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QMessageBox, QSystemTrayIcon, QStyle
 from PyQt6.QtGui import QIcon
 
-from src.gui.main_window import MainWindow, getResourcePath
-from src.gui.config import AppConfig
-from src.gui.labels import AppLabels
+from src.gui.windows.main_window import MainWindow
+from src.gui.resources.config import AppConfig
+from src.gui.resources.labels import AppLabels
+from src.gui.utils.resource_helper import getResourcePath
 
 def main():
     """

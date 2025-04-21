@@ -5,12 +5,13 @@
 """
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QLineEdit, QListWidget
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QListWidget, QListWidgetItem, QLineEdit, QMessageBox
 )
+from PyQt6.QtCore import Qt, QSize
 
-from src.gui.labels import AppLabels
-from src.gui.styles import AppStyles
+from src.gui.resources.labels import AppLabels
+from src.gui.resources.styles import AppStyles
 
 class VocabularyDialog(QDialog):
     """
