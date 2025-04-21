@@ -13,10 +13,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
-from pynput import keyboard
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
+from src.core.hotkeys import HotkeyManager
 from src.gui.resources.config import AppConfig
 from src.gui.resources.labels import AppLabels
 from src.gui.resources.styles import AppStyles
@@ -50,14 +50,21 @@ class MainWindow(QMainWindow):
         self.hotkey = self.settings.value("hotkey", AppConfig.DEFAULT_HOTKEY)
         self.auto_copy = self.settings.value("auto_copy", AppConfig.DEFAULT_AUTO_COPY, type=bool)
         
+        # ホットキーマネージャーの初期化
+        self.hotkey_manager = HotkeyManager()
+        
+        # コアコンポーネントの初期化
+        self.audio_recorder = None
+        self.whisper_transcriber = None
+        
+        # 録音状態
+        self.is_recording = False
+        
         # サウンド設定
         self.enable_sound = self.settings.value("enable_sound", AppConfig.DEFAULT_ENABLE_SOUND, type=bool)
         
         # インジケータ表示設定（デフォルトON）
         self.show_indicator = self.settings.value("show_indicator", AppConfig.DEFAULT_SHOW_INDICATOR, type=bool)
-        
-        # pynput用のキーボードリスナー
-        self.keyboard_listener = None
         
         # サウンドプレーヤーの初期化
         self.setup_sound_players()
@@ -626,31 +633,13 @@ class MainWindow(QMainWindow):
         エラーが発生しても、アプリケーションは引き続き動作します。
         """
         try:
-            # 以前のリスナーがあれば停止
-            if self.keyboard_listener:
-                self.keyboard_listener.stop()
-                print(f"Previous keyboard listener for '{self.hotkey}' has been stopped")
+            result = self.hotkey_manager.register_hotkey(self.hotkey, self.toggle_recording)
             
-            # ホットキーの組み合わせを解析
-            hotkey_combination = self._parse_hotkey_string(self.hotkey)
-            if not hotkey_combination:
-                raise ValueError(f"Invalid hotkey format: {self.hotkey}")
-            
-            print(f"Setting up hotkey: '{self.hotkey}' -> '{hotkey_combination}'")
-            
-            # キーボードリスナーを設定
-            try:
-                self.keyboard_listener = keyboard.GlobalHotKeys({
-                    hotkey_combination: self.toggle_recording
-                })
-                
-                # リスナーを開始（非ブロッキングモードで）
-                self.keyboard_listener.start()
+            if result:
                 print(f"Hotkey '{self.hotkey}' has been set successfully")
-                
                 return True
-            except Exception as e:
-                raise ValueError(f"Failed to register hotkey: {e}")
+            else:
+                raise ValueError(f"Failed to register hotkey: {self.hotkey}")
         except Exception as e:
             error_msg = f"Hotkey setup error: {e}"
             print(error_msg)
@@ -658,182 +647,6 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(AppLabels.ERROR_HOTKEY.format(str(e)), 5000)
             # エラーがあってもアプリは正常に動作するようにする
             return False
-    
-    def _parse_hotkey_string(self, hotkey_str):
-        """
-        ホットキー文字列をpynput形式に変換
-        
-        Parameters
-        ----------
-        hotkey_str : str
-            'ctrl+shift+r'のような形式のホットキー文字列
-            
-        Returns
-        -------
-        str
-            pynput形式のホットキー文字列（例: '<ctrl>+<shift>+r'）
-        """
-        if not hotkey_str:
-            return None
-            
-        # 大文字小文字を正規化
-        hotkey_str = hotkey_str.lower()
-        
-        # 修飾キーのマッピング
-        modifier_mapping = {
-            'ctrl': '<ctrl>',
-            'control': '<ctrl>',
-            'alt': '<alt>',
-            'option': '<alt>',  # macOS用
-            'shift': '<shift>',
-            'cmd': '<cmd>',
-            'command': '<cmd>',
-            'win': '<cmd>',
-            'windows': '<cmd>',
-            'meta': '<cmd>'
-        }
-        
-        # 特殊キーのマッピング
-        special_key_mapping = {
-            'f1': '<f1>', 'f2': '<f2>', 'f3': '<f3>', 'f4': '<f4>',
-            'f5': '<f5>', 'f6': '<f6>', 'f7': '<f7>', 'f8': '<f8>',
-            'f9': '<f9>', 'f10': '<f10>', 'f11': '<f11>', 'f12': '<f12>',
-            'esc': '<esc>', 'escape': '<esc>',
-            'tab': '<tab>',
-            'space': '<space>',
-            'backspace': '<backspace>', 'bs': '<backspace>',
-            'enter': '<enter>', 'return': '<enter>',
-            'ins': '<insert>', 'insert': '<insert>',
-            'del': '<delete>', 'delete': '<delete>',
-            'home': '<home>',
-            'end': '<end>',
-            'pageup': '<page_up>', 'pgup': '<page_up>',
-            'pagedown': '<page_down>', 'pgdn': '<page_down>',
-            'up': '<up>', 'down': '<down>', 'left': '<left>', 'right': '<right>',
-            'capslock': '<caps_lock>', 'caps': '<caps_lock>',
-            'numlock': '<num_lock>', 'num': '<num_lock>',
-            'scrolllock': '<scroll_lock>', 'scrl': '<scroll_lock>',
-            'prtsc': '<print_screen>', 'printscreen': '<print_screen>'
-        }
-        
-        parts = hotkey_str.split('+')
-        processed_parts = []
-        
-        # 少なくとも1つのキーが必要
-        if not parts:
-            return None
-            
-        for part in parts:
-            part = part.strip()
-            if part in modifier_mapping:
-                processed_parts.append(modifier_mapping[part])
-            elif part in special_key_mapping:
-                processed_parts.append(special_key_mapping[part])
-            elif len(part) == 1:  # 単一文字（a-z, 0-9など）
-                processed_parts.append(part)
-            else:
-                print(f"Warning: Unknown key '{part}' in hotkey. Using as is.")
-                processed_parts.append(part)
-        
-        # 最低1つのキーが存在することを確認
-        if not processed_parts:
-            return None
-            
-        return '+'.join(processed_parts)
-    
-    def setup_system_tray(self):
-        """
-        システムトレイアイコンとメニューの設定
-        
-        システムトレイアイコンを初期化し、右クリックで表示されるコンテキストメニューを
-        設定します。メニューには、アプリケーションの表示、録音開始/停止、終了オプションが
-        含まれます。
-        """
-        # アイコンファイルのパスを取得
-        icon_path = getResourcePath("assets/icon.ico")
-        
-        if os.path.exists(icon_path):
-            self.tray_icon = QSystemTrayIcon(QIcon(icon_path), self)
-        else:
-            # アイコンファイルが見つからない場合は標準アイコンを使用
-            self.tray_icon = QSystemTrayIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay), self)
-            print(f"Warning: System tray icon file not found: {icon_path}")
-        
-        self.tray_icon.setToolTip(AppLabels.APP_TITLE)
-        
-        # トレイメニューをスタイル付きで作成
-        menu = QMenu()
-        menu.setStyleSheet(AppStyles.SYSTEM_TRAY_MENU_STYLE)
-        
-        # 表示/非表示アクションを追加
-        show_action = QAction(AppLabels.TRAY_SHOW, self)
-        show_action.triggered.connect(self.show)
-        menu.addAction(show_action)
-        
-        # セパレーターを追加
-        menu.addSeparator()
-        
-        # 録音アクションを追加
-        record_action = QAction(AppLabels.TRAY_RECORD, self)
-        record_action.triggered.connect(self.toggle_recording)
-        menu.addAction(record_action)
-        
-        # セパレーターを追加
-        menu.addSeparator()
-        
-        # 終了アクションを追加
-        exit_action = QAction(AppLabels.TRAY_EXIT, self)
-        exit_action.triggered.connect(self.quit_application)
-        menu.addAction(exit_action)
-        
-        self.tray_icon.setContextMenu(menu)
-        self.tray_icon.activated.connect(self.tray_icon_activated)
-        self.tray_icon.show()
-    
-    def tray_icon_activated(self, reason):
-        """
-        トレイアイコンがアクティブ化されたときの処理
-        
-        Parameters
-        ----------
-        reason : QSystemTrayIcon.ActivationReason
-            アクティブ化の理由
-        
-        トレイアイコンがクリックされたときに、ウィンドウの表示/非表示を切り替えます。
-        """
-        if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            if self.isVisible():
-                self.hide()
-            else:
-                self.show()
-                self.activateWindow()
-    
-    def closeEvent(self, event):
-        """
-        ウィンドウの閉じるイベントを処理する
-        
-        Parameters
-        ----------
-        event : QCloseEvent
-            閉じるイベント
-        
-        ウィンドウの閉じるボタンが押されたときの処理を行います。
-        Alt+F4で完全終了、それ以外はトレイに最小化します。
-        """
-        # Alt+F4 またはシステムのクローズ要求によって呼ばれる
-        
-        # Alt キーが押されている場合は完全に終了
-        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
-            self.quit_application()
-            event.accept()
-        # 通常の閉じる操作ではトレイに最小化
-        elif self.tray_icon.isVisible():
-            QMessageBox.information(self, AppLabels.INFO_TITLE, 
-                AppLabels.INFO_TRAY_MINIMIZED)
-            self.hide()
-            event.ignore()
-        else:
-            event.accept()
     
     def show_hotkey_dialog(self):
         """
@@ -843,8 +656,7 @@ class MainWindow(QMainWindow):
         ダイアログ表示中は現在のホットキーを一時的に解除します。
         """
         # 現在のリスナーを一時的に停止
-        if self.keyboard_listener:
-            self.keyboard_listener.stop()
+        self.hotkey_manager.stop_listener()
         
         dialog = HotkeyDialog(self, self.hotkey)
         if dialog.exec():
@@ -879,8 +691,7 @@ class MainWindow(QMainWindow):
         トレイアイコンを非表示にし、設定を保存してからアプリケーションを終了します。
         """
         # キーボードリスナーを停止
-        if self.keyboard_listener:
-            self.keyboard_listener.stop()
+        self.hotkey_manager.stop_listener()
             
         # トレイアイコンを非表示にする
         if hasattr(self, 'tray_icon'):
@@ -981,3 +792,97 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(AppLabels.STATUS_INDICATOR_SHOWN, 2000)
         else:
             self.status_bar.showMessage(AppLabels.STATUS_INDICATOR_HIDDEN, 2000)
+
+    def setup_system_tray(self):
+        """
+        システムトレイアイコンとメニューの設定
+        
+        システムトレイアイコンを初期化し、右クリックで表示されるコンテキストメニューを
+        設定します。メニューには、アプリケーションの表示、録音開始/停止、終了オプションが
+        含まれます。
+        """
+        # アイコンファイルのパスを取得
+        icon_path = getResourcePath("assets/icon.ico")
+        
+        if os.path.exists(icon_path):
+            self.tray_icon = QSystemTrayIcon(QIcon(icon_path), self)
+        else:
+            # アイコンファイルが見つからない場合は標準アイコンを使用
+            self.tray_icon = QSystemTrayIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay), self)
+            print(f"Warning: System tray icon file not found: {icon_path}")
+        
+        self.tray_icon.setToolTip(AppLabels.APP_TITLE)
+        
+        # トレイメニューをスタイル付きで作成
+        menu = QMenu()
+        menu.setStyleSheet(AppStyles.SYSTEM_TRAY_MENU_STYLE)
+        
+        # 表示/非表示アクションを追加
+        show_action = QAction(AppLabels.TRAY_SHOW, self)
+        show_action.triggered.connect(self.show)
+        menu.addAction(show_action)
+        
+        # セパレーターを追加
+        menu.addSeparator()
+        
+        # 録音アクションを追加
+        record_action = QAction(AppLabels.TRAY_RECORD, self)
+        record_action.triggered.connect(self.toggle_recording)
+        menu.addAction(record_action)
+        
+        # セパレーターを追加
+        menu.addSeparator()
+        
+        # 終了アクションを追加
+        exit_action = QAction(AppLabels.TRAY_EXIT, self)
+        exit_action.triggered.connect(self.quit_application)
+        menu.addAction(exit_action)
+        
+        self.tray_icon.setContextMenu(menu)
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+        self.tray_icon.show()
+
+    def tray_icon_activated(self, reason):
+        """
+        トレイアイコンがアクティブ化されたときの処理
+        
+        Parameters
+        ----------
+        reason : QSystemTrayIcon.ActivationReason
+            アクティブ化の理由
+        
+        トレイアイコンがクリックされたときに、ウィンドウの表示/非表示を切り替えます。
+        """
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+            if self.isVisible():
+                self.hide()
+            else:
+                self.show()
+                self.activateWindow()
+
+    def closeEvent(self, event):
+        """
+        ウィンドウの閉じるイベントを処理する
+        
+        Parameters
+        ----------
+        event : QCloseEvent
+            閉じるイベント
+        
+        ウィンドウの閉じるボタンが押されたときの処理を行います。
+        Alt+F4で完全終了、それ以外はトレイに最小化します。
+        """
+        # Alt+F4 またはシステムのクローズ要求によって呼ばれる
+        
+        # Alt キーが押されている場合は完全に終了
+        if QApplication.keyboardModifiers() == Qt.KeyboardModifier.AltModifier:
+            self.quit_application()
+            event.accept()
+        # 通常の閉じる操作ではトレイに最小化
+        elif self.tray_icon.isVisible():
+            QMessageBox.information(self, AppLabels.INFO_TITLE, 
+                AppLabels.INFO_TRAY_MINIMIZED)
+            self.hide()
+            event.ignore()
+        else:
+            event.accept()

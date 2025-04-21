@@ -13,6 +13,7 @@ from PyQt6.QtGui import QKeyEvent, QKeySequence, QFont
 
 from src.gui.resources.labels import AppLabels
 from src.gui.resources.styles import AppStyles
+from src.core.hotkeys import HotkeyManager
 
 class HotkeyCapture(QWidget):
     """キーの組み合わせをキャプチャするカスタムウィジェット"""
@@ -141,6 +142,9 @@ class HotkeyDialog(QDialog):
         self.setWindowTitle(AppLabels.HOTKEY_DIALOG_TITLE)
         self.setMinimumWidth(400)
         
+        # ホットキーマネージャーのインスタンス（検証用）
+        self.hotkey_manager = HotkeyManager()
+        
         # スタイルシートを設定
         self.setStyleSheet(AppStyles.HOTKEY_DIALOG_STYLE)
         
@@ -197,13 +201,14 @@ class HotkeyDialog(QDialog):
         if not hotkey:
             QMessageBox.warning(self, "入力エラー", "ホットキーを設定してください。")
             return
+        
+        # ホットキーの有効性をチェック
+        if not self.hotkey_manager.is_valid_hotkey(hotkey):
+            QMessageBox.warning(self, "入力エラー", "無効なホットキー形式です。")
+            return
             
         # 修飾キーの存在を確認
-        parts = hotkey.split('+')
-        modifiers = ['ctrl', 'control', 'alt', 'shift', 'cmd', 'command', 'win', 'windows', 'meta']
-        has_modifier = any(part in modifiers for part in parts)
-        
-        if not has_modifier:
+        if not self.hotkey_manager.contains_modifier(hotkey):
             response = QMessageBox.question(
                 self,
                 "修飾キーがありません",
