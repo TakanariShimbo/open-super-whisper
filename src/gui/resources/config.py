@@ -20,7 +20,7 @@ class AppConfig:
     DEFAULT_AUTO_COPY = True
     DEFAULT_ENABLE_SOUND = True
     DEFAULT_SHOW_INDICATOR = True
-    DEFAULT_MODEL = "whisper-1"
+    DEFAULT_MODEL = "gpt-4o-transcribe"
     
     # 言語設定
     DEFAULT_LANGUAGE = ""  # 空文字列は自動検出を意味する
