@@ -21,6 +21,14 @@
 - 📋 クリップボードに文字起こし内容をコピー
 - 🔄 リアルタイムの録音状態表示とタイマー
 
+## 利用可能なモデル
+
+Open Super Whisperでは以下の文字起こしモデルを利用できます：
+
+- **Whisper-1** - OpenAIのオリジナルオープンソースWhisperモデル
+- **GPT-4o Transcribe** - 高性能文字起こしモデルで、優れた精度を提供
+- **GPT-4o Mini Transcribe** - 軽量・高速な文字起こしモデルで、速度と精度のバランスに優れています
+
 ## デモ
 
 ![Open Super Whisperの動作デモ](demo/demo.gif)

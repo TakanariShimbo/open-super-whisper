@@ -21,6 +21,14 @@ That's it! No need to switch applications during your workflow.
 - 📋 Copy transcription to clipboard
 - 🔄 Real-time recording status and timer
 
+## Available Models
+
+Open Super Whisper supports the following AI transcription models:
+
+- **Whisper-1** - OpenAI's original open-source Whisper model
+- **GPT-4o Transcribe** - High-performance transcription model offering superior accuracy
+- **GPT-4o Mini Transcribe** - Lightweight and fast transcription model with a good balance of speed and accuracy
+
 ## Demo
 
 ![Demo of Open Super Whisper in action](demo/demo.gif)
