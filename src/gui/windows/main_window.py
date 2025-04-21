@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import (
     QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
     QSystemTrayIcon, QMenu, QStyle, QFrame
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl, QObject
-from PyQt6.QtGui import QIcon, QAction, QFont
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
+from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from pynput import keyboard
 
