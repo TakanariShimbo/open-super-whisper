@@ -572,21 +572,18 @@ class MainWindow(QMainWindow):
         model_id = self.model_combo.currentData()
         model_name = self.model_combo.currentText()
         
-        # モデル情報でステータスを更新
-        self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIBED + f" (使用モデル: {model_name})", 3000)
+        # 文字起こし完了状態の表示
+        if self.show_indicator:
+            self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_TRANSCRIBED)
+            self.status_indicator_window.show()
         
         # 有効な場合は自動でクリップボードにコピー
         if self.auto_copy and text:
             QApplication.clipboard().setText(text)
             self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIBED_COPIED + f" (使用モデル: {model_name})", 3000)
-            
-            # コピー完了状態の表示
-            if self.show_indicator:
-                self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_COPIED)
-                self.status_indicator_window.show()
         else:
-            # 自動コピーが無効の場合は、ステータスインジケーターを非表示
-            self.status_indicator_window.hide()
+            # 自動コピーが無効の場合でもモデル情報でステータスを更新
+            self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIBED + f" (使用モデル: {model_name})", 3000)
         
         # 完了音を再生
         self.play_complete_sound()
@@ -596,16 +593,13 @@ class MainWindow(QMainWindow):
         文字起こし結果をクリップボードにコピーする
         
         現在のテキストウィジェットの内容をクリップボードにコピーし、
-        ユーザーに通知します。また、コピー完了状態のインジケーターを表示します。
+        ユーザーに通知します。
         """
         text = self.transcription_text.toPlainText()
         QApplication.clipboard().setText(text)
         self.status_bar.showMessage(AppLabels.STATUS_COPIED, 2000)
         
-        # コピー完了状態の表示
-        if self.show_indicator:
-            self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_COPIED)
-            self.status_indicator_window.show()
+        # 手動コピー時はインジケータを表示しない
     
     def setup_connections(self):
         """追加の接続設定"""

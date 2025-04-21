@@ -26,7 +26,7 @@ class StatusIndicatorWindow(QWidget):
     # 状態の定義
     MODE_RECORDING = 0
     MODE_TRANSCRIBING = 1
-    MODE_COPIED = 2
+    MODE_TRANSCRIBED = 2
     
     def __init__(self, parent=None):
         """
@@ -70,7 +70,7 @@ class StatusIndicatorWindow(QWidget):
         
         main_layout.addWidget(self.frame)
         
-        # コピー完了時の自動非表示タイマー
+        # 文字起こし完了時の自動非表示タイマー
         self.auto_hide_timer = QTimer(self)
         self.auto_hide_timer.setSingleShot(True)
         self.auto_hide_timer.timeout.connect(self.hide)
@@ -97,7 +97,7 @@ class StatusIndicatorWindow(QWidget):
         Parameters
         ----------
         mode : int
-            表示モード（MODE_RECORDING, MODE_TRANSCRIBING, MODE_COPIED）
+            表示モード（MODE_RECORDING, MODE_TRANSCRIBING, MODE_TRANSCRIBED）
         """
         self.current_mode = mode
         
@@ -119,14 +119,14 @@ class StatusIndicatorWindow(QWidget):
             # 文字起こし中のスタイル - グレー系のグラデーション
             self.frame.setStyleSheet(AppStyles.TRANSCRIBING_INDICATOR_FRAME_STYLE)
         
-        elif mode == self.MODE_COPIED:
-            self.status_label.setText(AppLabels.INDICATOR_COPIED)
+        elif mode == self.MODE_TRANSCRIBED:
+            self.status_label.setText(AppLabels.INDICATOR_TRANSCRIBED)
             self.setFixedSize(150, 70)
             self.timer_label.setText("")
             self.timer_label.hide()
             
-            # コピー完了のスタイル - 青系のグラデーション
-            self.frame.setStyleSheet(AppStyles.COPIED_INDICATOR_FRAME_STYLE)
+            # 文字起こし完了のスタイル - 青系のグラデーション
+            self.frame.setStyleSheet(AppStyles.TRANSCRIBED_INDICATOR_FRAME_STYLE)
             
             # 3秒後に非表示
             self.auto_hide_timer.start(3000)

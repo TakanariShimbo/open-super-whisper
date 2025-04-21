@@ -319,8 +319,8 @@ class AppStyles:
         }
     """
 
-    # コピー完了モードのインジケーターフレームスタイル
-    COPIED_INDICATOR_FRAME_STYLE = """
+    # 文字起こし完了モードのインジケーターフレームスタイル
+    TRANSCRIBED_INDICATOR_FRAME_STYLE = """
         #statusFrame {
             border-radius: 12px;
             background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,

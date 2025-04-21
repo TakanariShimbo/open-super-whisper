@@ -90,7 +90,7 @@ class AppLabels:
     # 状態インジケーター
     INDICATOR_RECORDING = "録音中"
     INDICATOR_TRANSCRIBING = "文字起こし中"
-    INDICATOR_COPIED = "コピー完了"
+    INDICATOR_TRANSCRIBED = "文字起こし完了"
     
     # システムトレイメニュー
     TRAY_SHOW = "表示"
