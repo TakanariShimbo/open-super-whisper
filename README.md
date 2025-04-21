@@ -17,13 +17,12 @@ A Python-based desktop application for speech transcription using OpenAI's Whisp
 
 ## Requirements
 
-- Python 3.8 or higher
 - OpenAI API key
-- Windows operating system
+- Windows or macOS operating system
 
 ## Installation
 
-### Using UV (Fast Package Manager)
+### Using UV Package Manager
 
 [UV](https://github.com/astral-sh/uv) is a fast and efficient Python package installer and environment manager. It's faster than traditional pip and venv, and provides better dependency resolution.
 
@@ -36,6 +35,10 @@ uv --version
 2. If not installed, you can install it with:
 
 ```bash
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -50,10 +53,11 @@ uv sync
 5. Activate the virtual environment:
 
 ```bash
-# Windows (Command Prompt)
-.venv\Scripts\activate.bat
-# Or Windows (PowerShell)
-# .\.venv\Scripts\activate.ps1
+# Windows (PowerShell)
+.\.venv\Scripts\activate.ps1
+
+# macOS/Linux
+source .venv/bin/activate
 ```
 
 > **Note**: If you get a "execution of scripts is disabled on this system" error when using `activate.ps1` in PowerShell, try one of these solutions:
@@ -80,21 +84,24 @@ python main.py
 To create a standalone executable, you can use PyInstaller:
 
 ```bash
-# Direct build option
+# Windows (PowerShell)
 python -m PyInstaller --onefile --windowed --icon assets/icon.ico --name "OpenSuperWhisper" --add-data "assets;assets" main.py
 
-# Or using the pre-configured spec file (recommended)
-python -m PyInstaller OpenSuperWhisper.spec
+# For macOS
+python -m PyInstaller --onefile --windowed --icon assets/icon.icns --name "OpenSuperWhisper" --add-data "assets:assets" main.py
+
+# For Linux
+python -m PyInstaller --onefile --windowed --icon assets/linux_pngs/icon_256.png --name "OpenSuperWhisper" --add-data "assets:assets" main.py
 ```
 
-The first command does the following:
+The Windows command does the following:
 - `--onefile`: Creates a single executable file
 - `--windowed`: Prevents a console window from appearing
 - `--icon assets/icon.ico`: Sets the application icon
 - `--name "OpenSuperWhisper"`: Specifies the output filename
 - `--add-data "assets;assets"`: Includes the entire assets directory in the executable
 
-Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` folder.
+Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` folder on Windows, `OpenSuperWhisper.app` in the `dist` folder on macOS, or `OpenSuperWhisper` in the `dist` folder on Linux.
 
 ## Usage
 
@@ -118,12 +125,12 @@ Once the build is complete, you'll find `OpenSuperWhisper.exe` in the `dist` fol
 2. Pressing this hotkey will start/stop recording even when the application is in the background
 3. To change the hotkey, click "Hotkey Settings" in the toolbar
 
-### Using the System Tray
+### Using the System Tray (Windows) or Menu Bar (macOS)
 
-1. The application stays resident in your system tray
+1. The application stays resident in your system tray (Windows) or menu bar (macOS)
 2. Closing the window will keep the application running in the background
-3. Click the system tray icon to toggle the application's visibility
-4. Right-click the system tray icon to access a context menu with options to:
+3. Click the system tray/menu bar icon to toggle the application's visibility
+4. Right-click the system tray icon (Windows) or click the menu bar icon (macOS) to access a context menu with options to:
    - Show the application
    - Start/stop recording
    - Completely exit the application

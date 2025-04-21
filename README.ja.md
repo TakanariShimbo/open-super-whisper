@@ -17,13 +17,12 @@ OpenAIのWhisperモデルを使用した音声文字起こしのためのPython�
 
 ## 必要条件
 
-- Python 3.8以上
 - OpenAI APIキー
-- Windowsオペレーティングシステム
+- WindowsまたはmacOSオペレーティングシステム
 
 ## インストール方法
 
-### UV を使用した方法（高速）
+### UV を使用した方法
 
 [UV](https://github.com/astral-sh/uv)は高速で効率的なPythonパッケージインストーラーおよび環境マネージャーです。従来のpipやvenvよりも高速で、依存関係の解決も優れています。
 
@@ -36,6 +35,10 @@ uv --version
 2. インストールされていない場合は、次のコマンドでインストールできます：
 
 ```bash
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -50,10 +53,11 @@ uv sync
 5. 仮想環境をアクティベート：
 
 ```bash
-# Windows（コマンドプロンプトの場合）
-.venv\Scripts\activate.bat
-# または Windows（PowerShellの場合）
-# .\.venv\Scripts\activate.ps1
+# Windows (PowerShell)
+.\.venv\Scripts\activate.ps1
+
+# macOS/Linux の場合
+source .venv/bin/activate
 ```
 
 > **注意**: PowerShellで`activate.ps1`実行時に「このシステムではスクリプトの実行が無効になっている」というエラーが表示される場合は、以下のいずれかの方法を試してください：
@@ -64,7 +68,7 @@ uv sync
 >    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 >    ```
 >    その後、`.\.venv\Scripts\activate.ps1`を実行
-> 3. 管理者権限でPowerShellを実行し、システム全体の実行ポリシーを変更（セキュリティ上のリスクを理解した上で行ってください）:
+> 3. 管理者権限でPowerShellを実行し、ユーザーアカウントの実行ポリシーを変更（セキュリティ上のリスクを理解した上で行ってください）:
 >    ```powershell
 >    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 >    ```
@@ -80,12 +84,16 @@ python main.py
 スタンドアロンの実行可能ファイルを作成するには、PyInstallerを使用します：
 
 ```bash
-# 直接ビルドする場合
+# Windows (PowerShell)
 python -m PyInstaller --onefile --windowed --icon assets/icon.ico --name "OpenSuperWhisper" --add-data "assets;assets" main.py
 
-# または、すでに設定済みのspecファイルを使用する場合（推奨）
-python -m PyInstaller OpenSuperWhisper.spec
+# macOS の場合
+python -m PyInstaller --onefile --windowed --icon assets/icon.icns --name "OpenSuperWhisper" --add-data "assets:assets" main.py
+
+# Linux の場合
+python -m PyInstaller --onefile --windowed --icon assets/linux_pngs/icon_256.png --name "OpenSuperWhisper" --add-data "assets:assets" main.py
 ```
+
 
 最初のコマンドは以下の処理を行います：
 - `--onefile`: 単一の実行可能ファイルを作成
@@ -94,7 +102,7 @@ python -m PyInstaller OpenSuperWhisper.spec
 - `--name "OpenSuperWhisper"`: 出力ファイル名を指定
 - `--add-data "assets;assets"`: assetsディレクトリを実行可能ファイルに含める
 
-ビルドが完了すると、`dist`フォルダ内に`OpenSuperWhisper.exe`が生成されます。
+ビルドが完了すると、Windowsでは`dist`フォルダ内に`OpenSuperWhisper.exe`、macOSでは`dist`フォルダ内に`OpenSuperWhisper.app`が生成されます。
 
 ## 使用方法
 
@@ -118,12 +126,12 @@ python -m PyInstaller OpenSuperWhisper.spec
 2. このホットキーを押すと、アプリケーションがバックグラウンドにあっても録音を開始/停止できます
 3. ホットキーを変更するには、ツールバーの「ホットキー設定」をクリックします
 
-### システムトレイの活用
+### システムトレイ（Windows）またはメニューバー（macOS）の活用
 
-1. アプリケーションはシステムトレイに常駐します
+1. アプリケーションはシステムトレイ（Windows）またはメニューバー（macOS）に常駐します
 2. ウィンドウを閉じてもアプリケーションはバックグラウンドで実行され続けます
-3. システムトレイアイコンをクリックしてアプリケーションの表示/非表示を切り替えます
-4. システムトレイのコンテキストメニュー（右クリック）から以下の操作が可能です：
+3. システムトレイ/メニューバーアイコンをクリックしてアプリケーションの表示/非表示を切り替えます
+4. システムトレイアイコンを右クリック（Windows）またはメニューバーアイコンをクリック（macOS）して以下の操作が可能です：
    - アプリケーションの表示
    - 録音の開始/停止
    - アプリケーションの完全終了
