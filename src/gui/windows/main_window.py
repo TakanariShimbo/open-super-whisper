@@ -629,27 +629,33 @@ class MainWindow(QMainWindow):
             # 以前のリスナーがあれば停止
             if self.keyboard_listener:
                 self.keyboard_listener.stop()
-                print("Previous keyboard listener has been stopped")
+                print(f"Previous keyboard listener for '{self.hotkey}' has been stopped")
             
             # ホットキーの組み合わせを解析
             hotkey_combination = self._parse_hotkey_string(self.hotkey)
             if not hotkey_combination:
                 raise ValueError(f"Invalid hotkey format: {self.hotkey}")
             
+            print(f"Setting up hotkey: '{self.hotkey}' -> '{hotkey_combination}'")
+            
             # キーボードリスナーを設定
-            self.keyboard_listener = keyboard.GlobalHotKeys({
-                hotkey_combination: self.toggle_recording
-            })
-            
-            # リスナーを開始（非ブロッキングモードで）
-            self.keyboard_listener.start()
-            print(f"Hotkey '{self.hotkey}' has been set")
-            
-            return True
+            try:
+                self.keyboard_listener = keyboard.GlobalHotKeys({
+                    hotkey_combination: self.toggle_recording
+                })
+                
+                # リスナーを開始（非ブロッキングモードで）
+                self.keyboard_listener.start()
+                print(f"Hotkey '{self.hotkey}' has been set successfully")
+                
+                return True
+            except Exception as e:
+                raise ValueError(f"Failed to register hotkey: {e}")
         except Exception as e:
-            print(f"Hotkey setup error: {e}")
+            error_msg = f"Hotkey setup error: {e}"
+            print(error_msg)
             # エラーメッセージをユーザーに表示
-            self.status_bar.showMessage(AppLabels.ERROR_HOTKEY.format(e), 5000)
+            self.status_bar.showMessage(AppLabels.ERROR_HOTKEY.format(str(e)), 5000)
             # エラーがあってもアプリは正常に動作するようにする
             return False
     
@@ -673,28 +679,66 @@ class MainWindow(QMainWindow):
         # 大文字小文字を正規化
         hotkey_str = hotkey_str.lower()
         
-        # キーマッピング
-        key_mapping = {
+        # 修飾キーのマッピング
+        modifier_mapping = {
             'ctrl': '<ctrl>',
             'control': '<ctrl>',
             'alt': '<alt>',
+            'option': '<alt>',  # macOS用
             'shift': '<shift>',
             'cmd': '<cmd>',
             'command': '<cmd>',
             'win': '<cmd>',
-            'windows': '<cmd>'
+            'windows': '<cmd>',
+            'meta': '<cmd>'
+        }
+        
+        # 特殊キーのマッピング
+        special_key_mapping = {
+            'f1': '<f1>', 'f2': '<f2>', 'f3': '<f3>', 'f4': '<f4>',
+            'f5': '<f5>', 'f6': '<f6>', 'f7': '<f7>', 'f8': '<f8>',
+            'f9': '<f9>', 'f10': '<f10>', 'f11': '<f11>', 'f12': '<f12>',
+            'esc': '<esc>', 'escape': '<esc>',
+            'tab': '<tab>',
+            'space': '<space>',
+            'backspace': '<backspace>', 'bs': '<backspace>',
+            'enter': '<enter>', 'return': '<enter>',
+            'ins': '<insert>', 'insert': '<insert>',
+            'del': '<delete>', 'delete': '<delete>',
+            'home': '<home>',
+            'end': '<end>',
+            'pageup': '<page_up>', 'pgup': '<page_up>',
+            'pagedown': '<page_down>', 'pgdn': '<page_down>',
+            'up': '<up>', 'down': '<down>', 'left': '<left>', 'right': '<right>',
+            'capslock': '<caps_lock>', 'caps': '<caps_lock>',
+            'numlock': '<num_lock>', 'num': '<num_lock>',
+            'scrolllock': '<scroll_lock>', 'scrl': '<scroll_lock>',
+            'prtsc': '<print_screen>', 'printscreen': '<print_screen>'
         }
         
         parts = hotkey_str.split('+')
         processed_parts = []
         
+        # 少なくとも1つのキーが必要
+        if not parts:
+            return None
+            
         for part in parts:
             part = part.strip()
-            if part in key_mapping:
-                processed_parts.append(key_mapping[part])
+            if part in modifier_mapping:
+                processed_parts.append(modifier_mapping[part])
+            elif part in special_key_mapping:
+                processed_parts.append(special_key_mapping[part])
+            elif len(part) == 1:  # 単一文字（a-z, 0-9など）
+                processed_parts.append(part)
             else:
+                print(f"Warning: Unknown key '{part}' in hotkey. Using as is.")
                 processed_parts.append(part)
         
+        # 最低1つのキーが存在することを確認
+        if not processed_parts:
+            return None
+            
         return '+'.join(processed_parts)
     
     def setup_system_tray(self):
