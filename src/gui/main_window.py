@@ -954,7 +954,7 @@ class MainWindow(QMainWindow):
                 self.status_bar.showMessage(AppLabels.STATUS_API_KEY_SAVED, 3000)
             except ValueError as e:
                 self.whisper_transcriber = None
-                QMessageBox.warning(self, AppLabels.ERROR_TITLE, str(e))
+                QMessageBox.warning(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_MISSING)
     
     def show_vocabulary_dialog(self):
         """
@@ -1159,7 +1159,7 @@ class MainWindow(QMainWindow):
             
         except Exception as e:
             # エラー処理
-            self.transcription_complete.emit(f"エラー: {str(e)}")
+            self.transcription_complete.emit(AppLabels.ERROR_TRANSCRIPTION.format(str(e)))
     
     def on_transcription_complete(self, text):
         """

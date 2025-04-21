@@ -102,6 +102,8 @@ class AppLabels:
     ERROR_API_KEY_REQUIRED = "先にAPIキーを設定してください"
     ERROR_SYSTEM_TRAY = "システムトレイがサポートされていません。"
     ERROR_HOTKEY = "ホットキー設定エラー: {0}"
+    ERROR_TRANSCRIPTION = "文字起こしエラー: {0}"
+    ERROR_API_KEY_MISSING = "OpenAI APIキーが必要です。直接入力するか、OPENAI_API_KEY環境変数を設定してください。"
     
     # 情報メッセージ
     INFO_TITLE = "情報"
