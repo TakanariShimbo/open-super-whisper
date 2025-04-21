@@ -2,11 +2,6 @@ import os
 import sys
 import threading
 import time
-from pathlib import Path
-from datetime import datetime
-import winreg
-import ctypes
-import shutil
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
