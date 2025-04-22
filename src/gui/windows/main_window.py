@@ -10,20 +10,21 @@ from PyQt6.QtWidgets import (
     QStatusBar, QToolBar, QDialog, QGridLayout, QFormLayout,
     QSystemTrayIcon, QMenu, QStyle, QFrame
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QUrl, QSize
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 from src.core.audio_recorder import AudioRecorder
 from src.core.whisper_api import WhisperTranscriber
 from src.core.hotkeys import HotkeyManager
+from src.core.instruction_sets import InstructionSetManager
 from src.gui.resources.config import AppConfig
 from src.gui.resources.labels import AppLabels
-from src.gui.resources.styles import AppStyles
+from src.gui.resources.styles import AppStyles, AppTheme
 from src.gui.components.dialogs.api_key_dialog import APIKeyDialog
-from src.gui.components.dialogs.vocabulary_dialog import VocabularyDialog
-from src.gui.components.dialogs.system_instructions_dialog import SystemInstructionsDialog
 from src.gui.components.dialogs.hotkey_dialog import HotkeyDialog
+from src.gui.components.dialogs.instruction_sets_dialog import InstructionSetsDialog
+from src.gui.components.dialogs.simple_message_dialog import SimpleMessageDialog
 from src.gui.components.widgets.status_indicator import StatusIndicatorWindow
 from src.gui.utils.resource_helper import getResourcePath
 
@@ -53,6 +54,10 @@ class MainWindow(QMainWindow):
         # ホットキーマネージャーの初期化
         self.hotkey_manager = HotkeyManager()
         
+        # 指示セットマネージャーの初期化
+        self.instruction_set_manager = InstructionSetManager(self.settings)
+        self.instruction_set_manager.load_from_settings()
+        
         # コアコンポーネントの初期化
         self.audio_recorder = None
         self.whisper_transcriber = None
@@ -80,6 +85,14 @@ class MainWindow(QMainWindow):
         
         try:
             self.whisper_transcriber = WhisperTranscriber(api_key=self.api_key)
+            
+            # 指示セットから語彙と指示を設定
+            if self.instruction_set_manager.active_set:
+                self.whisper_transcriber.clear_custom_vocabulary()
+                self.whisper_transcriber.add_custom_vocabulary(self.instruction_set_manager.get_active_vocabulary())
+                
+                self.whisper_transcriber.clear_system_instructions()
+                self.whisper_transcriber.add_system_instruction(self.instruction_set_manager.get_active_instructions())
         except ValueError:
             self.whisper_transcriber = None
         
@@ -111,8 +124,8 @@ class MainWindow(QMainWindow):
         およびウィジェットの配置を設定します。
         """
         self.setWindowTitle(AppLabels.APP_TITLE)
-        self.setMinimumSize(1200, 600)
-        self.setFixedSize(1200, 600)  # ウィンドウサイズを固定
+        self.setMinimumSize(AppTheme.MAIN_WINDOW_WIDTH, AppTheme.MAIN_WINDOW_HEIGHT)
+        self.setFixedSize(AppTheme.MAIN_WINDOW_WIDTH, AppTheme.MAIN_WINDOW_HEIGHT)  # ウィンドウサイズを固定
         
         # アプリケーションアイコンを設定
         icon_path = getResourcePath("assets/icon.ico")
@@ -125,13 +138,21 @@ class MainWindow(QMainWindow):
             print(f"Warning: Icon file not found: {icon_path}")
             
         # アプリ全体のスタイルを設定
-        self.setStyleSheet(AppStyles.MAIN_WINDOW_STYLE)
+        self.setStyleSheet(AppStyles.get_main_window_style())
         
         # 中央ウィジェットとメインレイアウトの作成
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(15, 15, 15, 15)
-        main_layout.setSpacing(10)
+        # pxを削除して整数に変換（必要な場合）
+        main_margin = AppTheme.MAIN_MARGIN
+        main_spacing = AppTheme.MAIN_SPACING
+        if isinstance(main_margin, str) and "px" in main_margin:
+            main_margin = int(main_margin.replace("px", ""))
+        if isinstance(main_spacing, str) and "px" in main_spacing:
+            main_spacing = int(main_spacing.replace("px", ""))
+        
+        main_layout.setContentsMargins(main_margin, main_margin, main_margin, main_margin)
+        main_layout.setSpacing(main_spacing)
         
         # ツールバーの作成
         self.create_toolbar()
@@ -139,31 +160,52 @@ class MainWindow(QMainWindow):
         # コントロールパネル
         control_panel = QWidget()
         control_panel.setObjectName("controlPanel")
-        control_panel.setStyleSheet(AppStyles.CONTROL_PANEL_STYLE)
+        control_panel.setStyleSheet(AppStyles.get_panel_style("control"))
         control_layout = QGridLayout()
-        control_layout.setContentsMargins(15, 15, 15, 15)
-        control_layout.setSpacing(12)
+        
+        # pxを削除して整数に変換（必要な場合）
+        panel_margin = AppTheme.PANEL_MARGIN
+        panel_spacing = AppTheme.PANEL_SPACING
+        if isinstance(panel_margin, str) and "px" in panel_margin:
+            panel_margin = int(panel_margin.replace("px", ""))
+        if isinstance(panel_spacing, str) and "px" in panel_spacing:
+            panel_spacing = int(panel_spacing.replace("px", ""))
+            
+        control_layout.setContentsMargins(panel_margin, panel_margin, panel_margin, panel_margin)
+        control_layout.setSpacing(panel_spacing)
         
         # 録音コントロール
         self.record_button = QPushButton(AppLabels.RECORD_START_BUTTON)
         self.record_button.setObjectName("recordButton")
-        self.record_button.setMinimumHeight(40)
+        # pxを削除して整数に変換
+        button_height = int(AppTheme.BUTTON_HEIGHT_LG.replace("px", ""))
+        self.record_button.setMinimumHeight(button_height)
         self.record_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.record_button.setStyleSheet(AppStyles.RECORD_BUTTON_STYLE)
+        self.record_button.setStyleSheet(AppStyles.get_record_button_style(False))
         self.record_button.clicked.connect(self.toggle_recording)
         
         # コントロールフォーム
         control_form = QWidget()
         form_layout = QFormLayout(control_form)
         form_layout.setContentsMargins(0, 0, 0, 0)
-        form_layout.setHorizontalSpacing(10)
-        form_layout.setVerticalSpacing(10)
+        
+        # pxを削除して整数に変換（必要な場合）
+        form_h_spacing = AppTheme.FORM_HORIZONTAL_SPACING
+        form_v_spacing = AppTheme.FORM_VERTICAL_SPACING
+        if isinstance(form_h_spacing, str) and "px" in form_h_spacing:
+            form_h_spacing = int(form_h_spacing.replace("px", ""))
+        if isinstance(form_v_spacing, str) and "px" in form_v_spacing:
+            form_v_spacing = int(form_v_spacing.replace("px", ""))
+            
+        form_layout.setHorizontalSpacing(form_h_spacing)
+        form_layout.setVerticalSpacing(form_v_spacing)
         form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         
         # 言語選択
         self.language_combo = QComboBox()
         self.language_combo.setObjectName("languageCombo")
+        self.language_combo.setStyleSheet(AppStyles.get_combobox_style())
         
         # 言語オプションの追加
         self.language_combo.addItem(AppLabels.AUTO_DETECT, "")
@@ -181,6 +223,7 @@ class MainWindow(QMainWindow):
         # モデル選択
         self.model_combo = QComboBox()
         self.model_combo.setObjectName("modelCombo")
+        self.model_combo.setStyleSheet(AppStyles.get_combobox_style())
         
         # モデルリストを取得してコンボボックスに追加
         for model in WhisperTranscriber.get_available_models():
@@ -201,9 +244,11 @@ class MainWindow(QMainWindow):
         # フォームにフィールドを追加
         language_label = QLabel(AppLabels.LANGUAGE_LABEL)
         language_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        language_label.setStyleSheet(AppStyles.get_label_style("form"))
         
         model_label = QLabel(AppLabels.MODEL_LABEL)
         model_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        model_label.setStyleSheet(AppStyles.get_label_style("form"))
         
         form_layout.addRow(language_label, self.language_combo)
         form_layout.addRow(model_label, self.model_combo)
@@ -220,15 +265,15 @@ class MainWindow(QMainWindow):
         # 文字起こしパネル
         transcription_panel = QWidget()
         transcription_panel.setObjectName("transcriptionPanel")
-        transcription_panel.setStyleSheet(AppStyles.TRANSCRIPTION_PANEL_STYLE)
+        transcription_panel.setStyleSheet(AppStyles.get_panel_style("transcription"))
         
         transcription_layout = QVBoxLayout(transcription_panel)
-        transcription_layout.setContentsMargins(15, 15, 15, 15)
+        transcription_layout.setContentsMargins(panel_margin, panel_margin, panel_margin, panel_margin)
         
         # タイトルラベル
         title_label = QLabel(AppLabels.TRANSCRIPTION_TITLE)
         title_label.setObjectName("sectionTitle")
-        title_label.setStyleSheet(AppStyles.TRANSCRIPTION_TITLE_STYLE)
+        title_label.setStyleSheet(AppStyles.get_label_style("section_title"))
         transcription_layout.addWidget(title_label)
         
         # 文字起こし出力
@@ -236,7 +281,7 @@ class MainWindow(QMainWindow):
         self.transcription_text.setPlaceholderText(AppLabels.TRANSCRIPTION_PLACEHOLDER)
         self.transcription_text.setReadOnly(False)  # 編集できるように設定
         self.transcription_text.setMinimumHeight(250)
-        self.transcription_text.setStyleSheet(AppStyles.TRANSCRIPTION_TEXT_STYLE)
+        self.transcription_text.setStyleSheet(AppStyles.get_text_edit_style())
         
         transcription_layout.addWidget(self.transcription_text)
         main_layout.addWidget(transcription_panel, 1)
@@ -244,16 +289,16 @@ class MainWindow(QMainWindow):
         # ステータスバー
         self.status_bar = self.statusBar()
         self.status_bar.showMessage(AppLabels.STATUS_READY)
-        self.status_bar.setStyleSheet(AppStyles.STATUS_BAR_STYLE)
+        self.status_bar.setStyleSheet(AppStyles.get_statusbar_style())
         
         # 録音インジケーター
         self.recording_indicator = QLabel("●")
         self.recording_indicator.setObjectName("recordingIndicator")
-        self.recording_indicator.setStyleSheet(AppStyles.RECORDING_INDICATOR_NORMAL_STYLE)
+        self.recording_indicator.setStyleSheet(AppStyles.get_recording_indicator_style("normal"))
         
         self.recording_timer_label = QLabel("00:00")
         self.recording_timer_label.setObjectName("recordingTimerLabel")
-        self.recording_timer_label.setStyleSheet(AppStyles.RECORDING_TIMER_LABEL_STYLE)
+        self.recording_timer_label.setStyleSheet(AppStyles.get_timer_label_style())
         
         self.status_bar.addPermanentWidget(self.recording_indicator)
         self.status_bar.addPermanentWidget(self.recording_timer_label)
@@ -269,70 +314,79 @@ class MainWindow(QMainWindow):
     
     def create_toolbar(self):
         """
-        アクション付きツールバーを作成する
+        アプリケーションのツールバーを作成
         
-        アプリケーションの主要機能にアクセスするためのツールバーボタンを設定します。
+        各種機能へのクイックアクセスを提供するツールバーを設定します。
         """
-        toolbar = QToolBar()
-        self.addToolBar(toolbar)
+        self.toolbar = QToolBar("Main Toolbar")
+        self.toolbar.setMovable(False)
+        self.toolbar.setFloatable(False)
+        # pxを削除して整数に変換
+        icon_size = int(AppTheme.ICON_SIZE_MD.replace("px", ""))
+        self.toolbar.setIconSize(QSize(icon_size, icon_size))
+        self.toolbar.setStyleSheet(AppStyles.get_toolbar_style())
         
-        # APIキーアクション
-        api_key_action = QAction(AppLabels.API_KEY_SETTINGS, self)
-        api_key_action.triggered.connect(self.show_api_key_dialog)
-        toolbar.addAction(api_key_action)
+        # APIキー設定
+        api_action = QAction(AppLabels.API_KEY_SETTINGS, self)
+        api_action.triggered.connect(self.show_api_key_dialog)
+        self.toolbar.addAction(api_action)
         
-        # カスタム語彙アクション
-        vocabulary_action = QAction(AppLabels.CUSTOM_VOCABULARY, self)
-        vocabulary_action.triggered.connect(self.show_vocabulary_dialog)
-        toolbar.addAction(vocabulary_action)
+        self.toolbar.addSeparator()
         
-        # システム指示アクション
-        system_instructions_action = QAction(AppLabels.SYSTEM_INSTRUCTIONS, self)
-        system_instructions_action.triggered.connect(self.show_system_instructions_dialog)
-        toolbar.addAction(system_instructions_action)
-        
-        # クリップボードにコピーアクション
-        copy_action = QAction(AppLabels.COPY_TO_CLIPBOARD, self)
-        copy_action.triggered.connect(self.copy_to_clipboard)
-        toolbar.addAction(copy_action)
-        
-        # セパレーター追加
-        toolbar.addSeparator()
-        
-        # グローバルホットキー設定
+        # ホットキー設定
         hotkey_action = QAction(AppLabels.HOTKEY_SETTINGS, self)
         hotkey_action.triggered.connect(self.show_hotkey_dialog)
-        toolbar.addAction(hotkey_action)
+        self.toolbar.addAction(hotkey_action)
         
-        # 自動コピーオプション
-        self.auto_copy_action = QAction(AppLabels.AUTO_COPY, self)
+        self.toolbar.addSeparator()
+        
+        # 指示セット管理
+        instruction_sets_action = QAction(AppLabels.INSTRUCTION_SETS_BUTTON, self)
+        instruction_sets_action.triggered.connect(self.show_instruction_sets_dialog)
+        self.toolbar.addAction(instruction_sets_action)
+        
+        self.toolbar.addSeparator()
+        
+        # クリップボードにコピー
+        copy_action = QAction(AppLabels.COPY_TO_CLIPBOARD, self)
+        copy_action.triggered.connect(self.copy_to_clipboard)
+        self.toolbar.addAction(copy_action)
+        
+        self.toolbar.addSeparator()
+        
+        # 自動コピー設定
+        self.auto_copy_action = QAction(AppLabels.AUTO_COPY_BUTTON, self)
         self.auto_copy_action.setCheckable(True)
         self.auto_copy_action.setChecked(self.auto_copy)
         self.auto_copy_action.triggered.connect(self.toggle_auto_copy)
-        toolbar.addAction(self.auto_copy_action)
+        self.toolbar.addAction(self.auto_copy_action)
         
-        # サウンドオプション
-        self.sound_action = QAction(AppLabels.SOUND_NOTIFICATION, self)
+        self.toolbar.addSeparator()
+        
+        # サウンド設定
+        self.sound_action = QAction(AppLabels.SOUND_BUTTON, self)
         self.sound_action.setCheckable(True)
         self.sound_action.setChecked(self.enable_sound)
         self.sound_action.triggered.connect(self.toggle_sound_option)
-        toolbar.addAction(self.sound_action)
+        self.toolbar.addAction(self.sound_action)
         
-        # インジケータ表示オプション
-        self.indicator_action = QAction(AppLabels.STATUS_INDICATOR, self)
+        self.toolbar.addSeparator()
+        
+        # インジケータ表示設定
+        self.indicator_action = QAction(AppLabels.INDICATOR_BUTTON, self)
         self.indicator_action.setCheckable(True)
         self.indicator_action.setChecked(self.show_indicator)
         self.indicator_action.triggered.connect(self.toggle_indicator_option)
-        toolbar.addAction(self.indicator_action)
+        self.toolbar.addAction(self.indicator_action)
         
-        # セパレーター追加
-        toolbar.addSeparator()
+        self.toolbar.addSeparator()
         
-        # 終了アクション
+        # アプリケーション終了
         exit_action = QAction(AppLabels.EXIT_APP, self)
         exit_action.triggered.connect(self.quit_application)
-        exit_action.setShortcut("Alt+F4")  # 終了ショートカットを追加
-        toolbar.addAction(exit_action)
+        self.toolbar.addAction(exit_action)
+        
+        self.addToolBar(self.toolbar)
     
     def show_api_key_dialog(self):
         """
@@ -351,41 +405,41 @@ class MainWindow(QMainWindow):
                 self.status_bar.showMessage(AppLabels.STATUS_API_KEY_SAVED, 3000)
             except ValueError as e:
                 self.whisper_transcriber = None
-                QMessageBox.warning(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_MISSING)
+                SimpleMessageDialog.show_message(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_MISSING, SimpleMessageDialog.WARNING)
     
-    def show_vocabulary_dialog(self):
+    def show_instruction_sets_dialog(self):
         """
-        カスタム語彙管理ダイアログを表示する
+        指示セットダイアログを表示
         
-        文字起こしの精度向上のためのカスタム語彙を管理するダイアログを表示します。
+        ユーザーが複数の語彙と指示のセットを管理・選択できるダイアログを表示します。
         """
         if not self.whisper_transcriber:
-            QMessageBox.warning(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_REQUIRED)
+            SimpleMessageDialog.show_message(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_REQUIRED, SimpleMessageDialog.WARNING)
             return
             
-        vocabulary = self.whisper_transcriber.get_custom_vocabulary()
-        dialog = VocabularyDialog(self, vocabulary)
+        dialog = InstructionSetsDialog(self)
         
-        if dialog.exec():
-            new_vocabulary = dialog.get_vocabulary()
-            self.whisper_transcriber.clear_custom_vocabulary()
-            self.whisper_transcriber.add_custom_vocabulary(new_vocabulary)
-            self.status_bar.showMessage(AppLabels.STATUS_VOCABULARY_ADDED.format(len(new_vocabulary)), 3000)
-    
-    def show_system_instructions_dialog(self):
-        """システム指示を管理するダイアログを表示"""
-        if not self.whisper_transcriber:
-            QMessageBox.warning(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_REQUIRED)
-            return
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # 更新されたマネージャーを取得
+            updated_manager = dialog.get_manager()
+            self.instruction_set_manager = updated_manager
             
-        instructions = self.whisper_transcriber.get_system_instructions()
-        dialog = SystemInstructionsDialog(self, instructions)
-        
-        if dialog.exec():
-            new_instructions = dialog.get_instructions()
-            self.whisper_transcriber.clear_system_instructions()
-            self.whisper_transcriber.add_system_instruction(new_instructions)
-            self.status_bar.showMessage(AppLabels.STATUS_INSTRUCTIONS_SET.format(len(new_instructions)), 3000)
+            # Whisperトランスクライバーに設定を反映
+            active_set = self.instruction_set_manager.active_set
+            if active_set:
+                # 語彙の更新
+                self.whisper_transcriber.clear_custom_vocabulary()
+                self.whisper_transcriber.add_custom_vocabulary(active_set.vocabulary)
+                
+                # 指示の更新
+                self.whisper_transcriber.clear_system_instructions()
+                self.whisper_transcriber.add_system_instruction(active_set.instructions)
+                
+                # ステータスバーに通知
+                self.statusBar().showMessage(
+                    AppLabels.STATUS_INSTRUCTION_SET_ACTIVE.format(active_set.name), 
+                    3000
+                )
     
     def toggle_recording(self):
         """
@@ -415,7 +469,7 @@ class MainWindow(QMainWindow):
         インジケーターウィンドウを表示します。
         """
         if not self.whisper_transcriber:
-            QMessageBox.warning(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_REQUIRED)
+            SimpleMessageDialog.show_message(self, AppLabels.ERROR_TITLE, AppLabels.ERROR_API_KEY_REQUIRED, SimpleMessageDialog.WARNING)
             return
             
         self.record_button.setText(AppLabels.RECORD_STOP_BUTTON)
@@ -464,25 +518,35 @@ class MainWindow(QMainWindow):
     
     def update_recording_status(self, is_recording):
         """
-        録音インジケーターの状態を更新する
+        録音状態に応じてUIを更新する
         
         Parameters
         ----------
         is_recording : bool
             録音中かどうかのフラグ
-        
-        録音状態に応じてUIの録音インジケーターとボタンのスタイルを更新します。
         """
+        self.is_recording = is_recording
+        
         if is_recording:
-            self.recording_indicator.setStyleSheet(AppStyles.RECORDING_INDICATOR_ACTIVE_STYLE)
+            # 録音中
+            self.record_button.setText(AppLabels.RECORD_STOP_BUTTON)
+            self.record_button.setStyleSheet(AppStyles.get_record_button_style(True))
+            self.recording_indicator.setStyleSheet(AppStyles.get_recording_indicator_style("active"))
+            self.status_bar.showMessage(AppLabels.STATUS_RECORDING)
             
-            # 録音ボタンのスタイルも変更
-            self.record_button.setStyleSheet(AppStyles.RECORD_BUTTON_RECORDING_STYLE)
+            if self.show_indicator:
+                # 録音中インジケーターを表示
+                self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_RECORDING)
+                self.status_indicator_window.show()
         else:
-            self.recording_indicator.setStyleSheet(AppStyles.RECORDING_INDICATOR_INACTIVE_STYLE)
+            # 録音停止
+            self.record_button.setText(AppLabels.RECORD_START_BUTTON)
+            self.record_button.setStyleSheet(AppStyles.get_record_button_style(False))
+            self.recording_indicator.setStyleSheet(AppStyles.get_recording_indicator_style("normal"))
+            self.status_bar.showMessage(AppLabels.STATUS_READY)
             
-            # 録音ボタンのスタイルを元に戻す
-            self.record_button.setStyleSheet(AppStyles.RECORD_BUTTON_STYLE)
+            # タイマーをリセット
+            self.recording_timer_label.setText("00:00")
     
     def update_recording_time(self):
         """
@@ -565,33 +629,24 @@ class MainWindow(QMainWindow):
         Parameters
         ----------
         text : str
-            文字起こし結果のテキスト
-        
-        文字起こし結果をテキストウィジェットに表示し、設定に応じて
-        クリップボードにコピーします。また、完了サウンドを再生します。
+            文字起こしされたテキスト
         """
-        # 文字起こし結果でテキストウィジェットを更新
-        self.transcription_text.setPlainText(text)
-        
-        # 使用したモデル名を取得
-        model_id = self.model_combo.currentData()
-        model_name = self.model_combo.currentText()
-        
-        # 文字起こし完了状態の表示
+        # UIを元に戻す
         if self.show_indicator:
+            # 文字起こし完了インジケーターを表示
             self.status_indicator_window.set_mode(StatusIndicatorWindow.MODE_TRANSCRIBED)
-            self.status_indicator_window.show()
         
-        # 有効な場合は自動でクリップボードにコピー
-        if self.auto_copy and text:
-            QApplication.clipboard().setText(text)
-            self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIBED_COPIED + f" (使用モデル: {model_name})", 3000)
-        else:
-            # 自動コピーが無効の場合でもモデル情報でステータスを更新
-            self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIBED + f" (使用モデル: {model_name})", 3000)
+        # 文字起こしテキストを表示
+        self.transcription_text.setText(text)
+        self.status_bar.showMessage(AppLabels.STATUS_TRANSCRIPTION_COMPLETE)
         
+        # 自動コピーが有効な場合はクリップボードにコピー
+        if self.auto_copy:
+            self.copy_to_clipboard()
+            
         # 完了音を再生
-        self.play_complete_sound()
+        if self.enable_sound:
+            self.play_complete_sound()
     
     def copy_to_clipboard(self):
         """
@@ -815,7 +870,7 @@ class MainWindow(QMainWindow):
         
         # トレイメニューをスタイル付きで作成
         menu = QMenu()
-        menu.setStyleSheet(AppStyles.SYSTEM_TRAY_MENU_STYLE)
+        menu.setStyleSheet(AppStyles.get_system_tray_menu_style())
         
         # 表示/非表示アクションを追加
         show_action = QAction(AppLabels.TRAY_SHOW, self)
@@ -880,8 +935,7 @@ class MainWindow(QMainWindow):
             event.accept()
         # 通常の閉じる操作ではトレイに最小化
         elif self.tray_icon.isVisible():
-            QMessageBox.information(self, AppLabels.INFO_TITLE, 
-                AppLabels.INFO_TRAY_MINIMIZED)
+            SimpleMessageDialog.show_message(self, AppLabels.INFO_TITLE, AppLabels.INFO_TRAY_MINIMIZED, SimpleMessageDialog.INFO)
             self.hide()
             event.ignore()
         else:

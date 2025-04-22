@@ -23,13 +23,16 @@ class AppLabels:
     
     # ツールバーアイテム
     API_KEY_SETTINGS = "APIキー設定"
-    CUSTOM_VOCABULARY = "カスタム語彙"
-    SYSTEM_INSTRUCTIONS = "システム指示"
+    INSTRUCTION_SETS = "指示セット"
+    INSTRUCTION_SETS_BUTTON = "指示セット"
     COPY_TO_CLIPBOARD = "クリップボードにコピー"
     HOTKEY_SETTINGS = "ホットキー設定"
     AUTO_COPY = "自動コピー"
+    AUTO_COPY_BUTTON = "自動コピー"
     SOUND_NOTIFICATION = "通知音"
+    SOUND_BUTTON = "通知音"
     STATUS_INDICATOR = "状態インジケータ"
+    INDICATOR_BUTTON = "状態インジケータ"
     EXIT_APP = "アプリケーション終了"
     
     # ステータスメッセージ
@@ -49,6 +52,8 @@ class AppLabels:
     STATUS_VOCABULARY_ADDED = "{0}個の語彙を追加しました"
     STATUS_INSTRUCTIONS_SET = "{0}個のシステム指示を設定しました"
     STATUS_MODEL_CHANGED = "文字起こしモデルを「{0}」に変更しました"
+    STATUS_INSTRUCTION_SET_ACTIVE = "指示セット「{0}」をアクティブにしました"
+    STATUS_TRANSCRIPTION_COMPLETE = "文字起こしが完了しました"
     
     # APIキーダイアログ
     API_KEY_DIALOG_TITLE = "OpenAI APIキー"
@@ -57,23 +62,56 @@ class AppLabels:
     SAVE_BUTTON = "保存"
     CANCEL_BUTTON = "キャンセル"
     
-    # カスタム語彙ダイアログ
+    # 警告メッセージ
+    WARNING_TITLE = "警告"
+    APIKEY_EMPTY_WARNING = "APIキーを入力してください。"
+    APIKEY_TOO_SHORT_WARNING = "APIキーの形式が正しくありません。"
+    
+    # 共通のボタンラベル
+    OK_BUTTON = "OK"
+    APPLY_BUTTON = "適用"
+    YES_BUTTON = "はい"
+    NO_BUTTON = "いいえ"
+    
+    # 指示セットで使用する語彙とシステム指示関連のラベル
     VOCABULARY_DIALOG_TITLE = "カスタム語彙"
     VOCABULARY_SECTION_TITLE = "カスタム語彙の単語"
-    VOCABULARY_PLACEHOLDER = "新しい単語を入力..."
-    ADD_BUTTON = "追加"
-    REMOVE_SELECTED = "選択項目を削除"
-    REMOVE_ALL = "すべて削除"
-    OK_BUTTON = "OK"
-    
-    # システム指示ダイアログ
-    INSTRUCTIONS_DIALOG_TITLE = "システム指示"
+    VOCABULARY_PLACEHOLDER = "各行に1つの単語または短い語句を入力してください..."
+    SYSTEM_INSTRUCTIONS_DIALOG_TITLE = "システム指示"
     INSTRUCTIONS_INFO = "ここで文字起こしのための特別な指示を設定できます。例：\n" \
                       "- \"えー、あの、などのフィラーを無視してください\"\n" \
                       "- \"句読点を適切に入れてください\"\n" \
                       "- \"段落に分けてください\""
-    INSTRUCTIONS_SECTION_TITLE = "システム指示リスト:"
-    INSTRUCTIONS_PLACEHOLDER = "新しい指示を入力..."
+    SYSTEM_INSTRUCTIONS_DIALOG_PLACEHOLDER = "各行に1つの指示を入力してください..."
+    
+    # 指示セットダイアログ
+    INSTRUCTION_SETS_DIALOG_TITLE = "指示セット管理"
+    INSTRUCTION_SETS_LIST_LABEL = "保存されたセット:"
+    INSTRUCTION_SETS_ADD_BUTTON = "新規作成"
+    INSTRUCTION_SETS_RENAME_BUTTON = "名前変更"
+    INSTRUCTION_SETS_REMOVE_BUTTON = "削除"
+    INSTRUCTION_SETS_NEW_TITLE = "新しいセット"
+    INSTRUCTION_SETS_NEW_PROMPT = "新しいセットの名前を入力してください:"
+    INSTRUCTION_SETS_RENAME_TITLE = "セット名変更"
+    INSTRUCTION_SETS_RENAME_PROMPT = "新しい名前を入力してください:"
+    INSTRUCTION_SETS_REMOVE_TITLE = "セット削除"
+    INSTRUCTION_SETS_REMOVE_CONFIRM = "セット「{0}」を削除してもよろしいですか？"
+    INSTRUCTION_SETS_LAST_SET_ERROR = "最後のセットは削除できません。"
+    INSTRUCTION_SETS_UPDATED_TITLE = "セット更新"
+    INSTRUCTION_SETS_UPDATED_MESSAGE = "指示セットが更新され、アクティブに設定されました。"
+    INSTRUCTION_SETS_VIEW_MODE_BUTTON = "一覧表示モード"
+    INSTRUCTION_SETS_EDIT_MODE_BUTTON = "編集モード"
+    INSTRUCTION_SETS_TABLE_MODE_TITLE = "指示セット一覧"
+    INSTRUCTION_SETS_TABLE_NAME_COLUMN = "セット名"
+    INSTRUCTION_SETS_TABLE_VOCABULARY_COLUMN = "語彙"
+    INSTRUCTION_SETS_TABLE_INSTRUCTIONS_COLUMN = "指示"
+    INSTRUCTION_SETS_ACTIVE_MARK = "（アクティブ）"
+    
+    # 指示セットアクション
+    INSTRUCTION_SETS_ACTIVATE_BUTTON = "このセットをアクティブ化"
+    INSTRUCTION_SETS_CURRENTLY_ACTIVE = "現在アクティブなセット"
+    INSTRUCTION_SETS_EDIT_SECTION_TITLE = "選択したセットの編集"
+    INSTRUCTION_SETS_UPDATED_SUCCESS = "セットが更新されました"
     
     # グローバルホットキーダイアログ
     HOTKEY_DIALOG_TITLE = "グローバルホットキー設定"

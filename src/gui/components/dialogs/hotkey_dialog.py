@@ -6,14 +6,15 @@
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QPushButton, QLineEdit, QLabel, QMessageBox, QWidget
+    QPushButton, QLineEdit, QLabel, QMessageBox, QWidget, QApplication, QFrame
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QKeyEvent, QKeySequence, QFont
 
 from src.gui.resources.labels import AppLabels
-from src.gui.resources.styles import AppStyles
+from src.gui.resources.styles import AppStyles, AppTheme
 from src.core.hotkeys import HotkeyManager
+from src.gui.utils.resource_helper import getResourcePath
 
 class HotkeyCapture(QWidget):
     """キーの組み合わせをキャプチャするカスタムウィジェット"""
@@ -26,13 +27,17 @@ class HotkeyCapture(QWidget):
         # 押されたキーの組み合わせを表示するラベル
         self.display_label = QLabel("キーを押してください...")
         self.display_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.display_label.setStyleSheet("""
-            border: 1px solid #E2E6EC;
-            border-radius: 4px;
+        
+        # 新しいスタイル適用方法
+        custom_input_style = f"""
+            border: 1px solid {AppTheme.BORDER};
+            border-radius: {AppTheme.RADIUS_SM};
             padding: 8px;
-            background-color: white;
+            background-color: {AppTheme.SURFACE};
             min-height: 24px;
-        """)
+        """
+        self.display_label.setStyleSheet(custom_input_style)
+        
         font = QFont()
         font.setBold(True)
         self.display_label.setFont(font)
@@ -41,6 +46,7 @@ class HotkeyCapture(QWidget):
         self.clear_button = QPushButton("クリア")
         self.clear_button.clicked.connect(self.clear_hotkey)
         self.clear_button.setFixedWidth(80)
+        self.clear_button.setProperty("class", "secondary")
         
         # 水平レイアウトでラベルとクリアボタンを配置
         h_layout = QHBoxLayout()
@@ -127,7 +133,7 @@ class HotkeyDialog(QDialog):
     録音の開始/停止に使用するグローバルホットキーを設定するためのダイアログウィンドウ
     """
     
-    def __init__(self, parent=None, current_hotkey=None):
+    def __init__(self, parent=None, current_hotkey=""):
         """
         HotkeyDialogの初期化
         
@@ -140,94 +146,100 @@ class HotkeyDialog(QDialog):
         """
         super().__init__(parent)
         self.setWindowTitle(AppLabels.HOTKEY_DIALOG_TITLE)
-        self.setMinimumWidth(400)
+        self.setStyleSheet(AppStyles.get_dialog_style())
+        self.setMinimumWidth(450)  # ダイアログ幅を広げる
         
-        # ホットキーマネージャーのインスタンス（検証用）
-        self.hotkey_manager = HotkeyManager()
+        self.current_hotkey = current_hotkey
         
-        # スタイルシートを設定
-        self.setStyleSheet(AppStyles.HOTKEY_DIALOG_STYLE)
+        # UI初期化
+        self.init_ui()
         
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+    def init_ui(self):
+        """UIの初期化"""
+        # メインレイアウト
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(AppTheme.MAIN_MARGIN, AppTheme.MAIN_MARGIN, 
+                                      AppTheme.MAIN_MARGIN, AppTheme.MAIN_MARGIN)
+        main_layout.setSpacing(AppTheme.MAIN_SPACING)
         
-        # ホットキー入力
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
+        # ダイアログフレーム
+        dialog_frame = QFrame(self)
+        dialog_frame.setObjectName("dialogFrame")
+        layout = QVBoxLayout(dialog_frame)
+        layout.setContentsMargins(int(AppTheme.PADDING_MD.split()[0].replace("px", "")), 
+                                int(AppTheme.PADDING_MD.split()[0].replace("px", "")),
+                                int(AppTheme.PADDING_MD.split()[0].replace("px", "")), 
+                                int(AppTheme.PADDING_MD.split()[0].replace("px", "")))
+        layout.setSpacing(int(AppTheme.SPACING_MD.replace("px", "")))
         
-        # カスタムのホットキーキャプチャウィジェットを使用
+        # ダイアログタイトル
+        title_label = QLabel(AppLabels.HOTKEY_DIALOG_TITLE)
+        title_label.setObjectName("dialogTitle")
+        layout.addWidget(title_label)
+        
+        # セパレーター
+        separator = QFrame()
+        separator.setObjectName("separatorLine")
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFixedHeight(1)
+        layout.addWidget(separator)
+        
+        # ホットキーキャプチャーウィジェット
         self.hotkey_capture = HotkeyCapture()
-        if current_hotkey:
-            self.hotkey_capture.set_hotkey(current_hotkey)
+        if self.current_hotkey:
+            self.hotkey_capture.set_hotkey(self.current_hotkey)
         
-        form_layout.addRow(AppLabels.HOTKEY_LABEL, self.hotkey_capture)
-        layout.addLayout(form_layout)
-        
-        # 情報テキスト
+        # 説明テキスト
         info_label = QLabel(AppLabels.HOTKEY_INFO)
+        info_label.setStyleSheet(AppStyles.INFO_LABEL_STYLE)
         info_label.setWordWrap(True)
-        info_label.setStyleSheet(AppStyles.API_KEY_INFO_LABEL_STYLE)
+        
+        # ウィジェットを配置
+        layout.addWidget(QLabel(AppLabels.HOTKEY_LABEL))
+        layout.addWidget(self.hotkey_capture)
         layout.addWidget(info_label)
         
-        # 使用方法テキスト
-        usage_label = QLabel("使用方法: 設定したいキーの組み合わせを押してください。")
-        usage_label.setWordWrap(True)
-        usage_label.setStyleSheet(AppStyles.API_KEY_INFO_LABEL_STYLE)
-        layout.addWidget(usage_label)
-        
-        # ボタン
+        # ボタンレイアウト
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
-        self.save_button = QPushButton(AppLabels.SAVE_BUTTON)
-        self.save_button.clicked.connect(self.validate_and_accept)
         
+        # キャンセルボタン
         self.cancel_button = QPushButton(AppLabels.CANCEL_BUTTON)
-        self.cancel_button.setObjectName("cancelButton")
+        self.cancel_button.setProperty("class", "secondary")
         self.cancel_button.clicked.connect(self.reject)
         
+        # 保存ボタン
+        self.save_button = QPushButton(AppLabels.SAVE_BUTTON)
+        self.save_button.setProperty("class", "primary")
+        self.save_button.clicked.connect(self.accept)
+        
+        button_layout.addStretch()
         button_layout.addWidget(self.cancel_button)
         button_layout.addWidget(self.save_button)
         
         layout.addLayout(button_layout)
-        self.setLayout(layout)
-    
-    def validate_and_accept(self):
-        """
-        ホットキー入力を検証してから受け入れる
-        """
-        hotkey = self.hotkey_capture.get_hotkey()
         
-        if not hotkey:
-            QMessageBox.warning(self, "入力エラー", "ホットキーを設定してください。")
-            return
-        
-        # ホットキーの有効性をチェック
-        if not self.hotkey_manager.is_valid_hotkey(hotkey):
-            QMessageBox.warning(self, "入力エラー", "無効なホットキー形式です。")
-            return
-            
-        # 修飾キーの存在を確認
-        if not self.hotkey_manager.contains_modifier(hotkey):
-            response = QMessageBox.question(
-                self,
-                "修飾キーがありません",
-                "修飾キー（Ctrl, Alt, Shiftなど）を含まないホットキーは他のアプリケーションと衝突する可能性があります。\n\n続行しますか？",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
-            if response == QMessageBox.StandardButton.No:
-                return
-        
-        self.accept()
+        main_layout.addWidget(dialog_frame)
     
     def get_hotkey(self):
-        """
-        入力されたホットキーを返す
+        """設定されたホットキーを取得"""
+        return self.hotkey_capture.get_hotkey()
+    
+    def clear_hotkey(self):
+        """ホットキーをクリア"""
+        self.hotkey_capture.clear_hotkey()
+
+# スタンドアロンでテスト実行時の処理
+if __name__ == "__main__":
+    import sys
+    
+    app = QApplication(sys.argv)
+    
+    # テスト用ダイアログを表示
+    dialog = HotkeyDialog(current_hotkey="ctrl+shift+r")
+    
+    if dialog.exec() == QDialog.DialogCode.Accepted:
+        print(f"設定されたホットキー: {dialog.get_hotkey()}")
+    else:
+        print("キャンセルされました")
         
-        Returns
-        -------
-        str
-            入力されたホットキー文字列
-        """
-        return self.hotkey_capture.get_hotkey() 
+    sys.exit() 

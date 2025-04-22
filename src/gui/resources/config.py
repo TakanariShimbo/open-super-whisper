@@ -28,4 +28,8 @@ class AppConfig:
     # サウンドファイルパス
     START_SOUND_PATH = "assets/start_sound.wav"
     STOP_SOUND_PATH = "assets/stop_sound.wav"
-    COMPLETE_SOUND_PATH = "assets/complete_sound.wav" 
+    COMPLETE_SOUND_PATH = "assets/complete_sound.wav"
+    
+    # InstructionSet設定
+    DEFAULT_INSTRUCTION_SET_NAME = "デフォルト"
+    INSTRUCTION_SETS_SETTINGS_PREFIX = "InstructionSets" 
